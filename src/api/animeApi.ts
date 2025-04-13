@@ -1,0 +1,170 @@
+
+import { toast } from "sonner";
+
+// Base API URL - Change this to match your Flask API's URL
+const API_BASE_URL = "http://localhost:5000";
+
+// API response interfaces
+export interface AnimeBasic {
+  title: string;
+  url: string;
+  image_url: string;
+}
+
+export interface TopAnime extends AnimeBasic {
+  rating: string;
+  rank: string;
+}
+
+export interface LatestAnime extends AnimeBasic {
+  episode: string;
+  views: string;
+  duration: string;
+  rank: string | null;
+}
+
+export interface AnimeEpisode {
+  title: string;
+  url: string;
+}
+
+export interface AnimeDetails {
+  title: string;
+  image_url: string;
+  rating: string;
+  release_date: string;
+  genres: string[];
+  synopsis: string;
+  episodes: AnimeEpisode[];
+}
+
+export interface EpisodeStream {
+  title: string;
+  stream_url: string;
+  download_links: Record<string, Array<{ host: string; url: string }>>;
+  player_options: string[];
+}
+
+export interface PaginatedResponse<T> {
+  anime_list: T[];
+  current_page: number;
+  total_pages: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+}
+
+// Error handling function
+const handleApiError = (error: unknown): never => {
+  const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+  toast.error(errorMessage);
+  throw new Error(errorMessage);
+};
+
+// API functions
+export const fetchTopAnime = async (): Promise<TopAnime[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/top-anime`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<TopAnime[]>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch top anime");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchLatestAnime = async (page = 1): Promise<PaginatedResponse<LatestAnime>> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/latest-anime?page=${page}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<PaginatedResponse<LatestAnime>>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch latest anime");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimeDetails = async (url: string): Promise<AnimeDetails> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/anime-details?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<AnimeDetails>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch anime details");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchEpisodeStreams = async (url: string): Promise<EpisodeStream> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/episode-streams?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<EpisodeStream>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch episode streams");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const searchAnime = async (query: string): Promise<AnimeBasic[]> => {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<AnimeBasic[]>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to search anime");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};

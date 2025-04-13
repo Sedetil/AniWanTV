@@ -1,0 +1,115 @@
+
+import { useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { searchAnime } from "@/api/animeApi";
+import { Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import AnimeGrid from "@/components/AnimeGrid";
+
+const SearchResults = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const initialQuery = searchParams.get("q") || "";
+  
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['searchAnime', initialQuery],
+    queryFn: () => searchAnime(initialQuery),
+    enabled: !!initialQuery,
+  });
+  
+  // Update search query when URL params change
+  useEffect(() => {
+    const query = searchParams.get("q") || "";
+    setSearchQuery(query);
+  }, [searchParams]);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (searchQuery.trim()) {
+      setSearchParams({ q: searchQuery });
+      refetch();
+    }
+  };
+  
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchParams({});
+  };
+  
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 pt-24">
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          {/* Search form */}
+          <div>
+            <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search anime..."
+                  className="pl-10 pr-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    type="button"
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <Button type="submit">Search</Button>
+            </form>
+          </div>
+          
+          {/* Search results */}
+          {initialQuery && (
+            <AnimeGrid
+              title={`Search Results for "${initialQuery}"`}
+              animeList={data || []}
+              loading={isLoading}
+              aspectRatio="portrait"
+              viewType="grid"
+            />
+          )}
+          
+          {/* No results message */}
+          {!isLoading && initialQuery && data && data.length === 0 && (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold mb-2">No results found</h2>
+              <p className="text-muted-foreground mb-6">
+                We couldn't find any anime matching "{initialQuery}". Try a different search term.
+              </p>
+              <Link to="/">
+                <Button variant="outline">Return to Home</Button>
+              </Link>
+            </div>
+          )}
+          
+          {/* No search query message */}
+          {!initialQuery && (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold mb-2">Search for Anime</h2>
+              <p className="text-muted-foreground">
+                Enter a search term to find your favorite anime.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default SearchResults;
