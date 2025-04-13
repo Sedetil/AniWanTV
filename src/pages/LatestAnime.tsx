@@ -12,7 +12,7 @@ const LatestAnime = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['latestAnime', currentPage],
     queryFn: () => fetchLatestAnime(currentPage),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
   
   const handlePageChange = (page: number) => {

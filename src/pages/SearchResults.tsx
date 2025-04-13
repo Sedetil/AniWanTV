@@ -41,6 +41,16 @@ const SearchResults = () => {
     setSearchParams({});
   };
   
+  // Transform the search results to match the expected type
+  const transformedResults = data ? data.map(anime => ({
+    ...anime,
+    rating: 'N/A',
+    rank: 'N/A',
+    episode: 'N/A',
+    views: 'N/A',
+    duration: 'N/A'
+  })) : [];
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -76,7 +86,7 @@ const SearchResults = () => {
           {initialQuery && (
             <AnimeGrid
               title={`Search Results for "${initialQuery}"`}
-              animeList={data || []}
+              animeList={transformedResults}
               loading={isLoading}
               aspectRatio="portrait"
               viewType="grid"
