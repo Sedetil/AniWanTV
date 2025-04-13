@@ -151,7 +151,11 @@ export const searchAnime = async (query: string): Promise<AnimeBasic[]> => {
       return [];
     }
     
-    const response = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+    // Updated to use the correct search endpoint format
+    const searchUrl = `${API_BASE_URL}/search?query=${encodeURIComponent(query)}`;
+    console.log("Search URL:", searchUrl);
+    
+    const response = await fetch(searchUrl);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
@@ -163,6 +167,7 @@ export const searchAnime = async (query: string): Promise<AnimeBasic[]> => {
       throw new Error(result.error || "Failed to search anime");
     }
     
+    console.log("Search results:", result.data);
     return result.data;
   } catch (error) {
     return handleApiError(error);
