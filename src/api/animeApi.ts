@@ -151,7 +151,7 @@ export const searchAnime = async (query: string): Promise<AnimeBasic[]> => {
       return [];
     }
     
-    // Make sure we're using the correct query parameter name that the backend expects
+    // Updated to use the correct search endpoint format
     const searchUrl = `${API_BASE_URL}/search?query=${encodeURIComponent(query)}`;
     console.log("Search URL:", searchUrl);
     
