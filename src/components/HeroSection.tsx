@@ -56,11 +56,21 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
   const isTopAnime = "rating" in activeAnime;
   const isLatestAnime = "episode" in activeAnime;
   
+  // Check if image URL exists and is valid
+  const backgroundImageUrl = activeAnime.image_url || '';
+  
+  // Add fallback image if needed
+  const fallbackBackground = "linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.9))";
+  
+  console.log("Hero Section Image URL:", backgroundImageUrl);
+  
   return (
     <div 
       className="relative w-full h-[70vh] bg-cover bg-center bg-no-repeat flex items-end"
       style={{
-        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7), var(--background)), url(${activeAnime.image_url})`,
+        backgroundImage: backgroundImageUrl 
+          ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7), var(--background)), url("${backgroundImageUrl}")`
+          : fallbackBackground,
       }}
     >
       <div className="container mx-auto px-4 pb-16 md:pb-24 mt-auto">

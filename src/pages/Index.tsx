@@ -25,6 +25,7 @@ const Index = () => {
     if (topAnime && topAnime.length > 0) {
       // Get top 5 anime for featured section
       const featured = topAnime.slice(0, 5);
+      console.log("Setting featured anime:", featured);
       setFeaturedAnime(featured);
     }
   }, [topAnime]);
