@@ -27,7 +27,6 @@ const WatchEpisode = () => {
   const [useVideoTag, setUseVideoTag] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Construct full URL from the slug
   const episodeUrl = `https://winbu.tv${location.pathname}`;
 
   const { data, isLoading, error } = useQuery({
@@ -36,7 +35,6 @@ const WatchEpisode = () => {
     retry: 1,
   });
 
-  // Validate stream URLs
   const isValidStreamUrl = (url) => {
     if (!url) return false;
     const lowerUrl = url.toLowerCase();
@@ -47,66 +45,119 @@ const WatchEpisode = () => {
       lowerUrl.includes('/embed') ||
       lowerUrl.includes('/player') ||
       lowerUrl.includes('/stream') ||
-      lowerUrl.includes('pixeldrain.com/api/file')
+      lowerUrl.includes('krakenfiles.com/embed-video') ||
+      lowerUrl.includes('mega.nz/embed') ||
+      lowerUrl.includes('pixeldrain.com')
     );
   };
 
-  // Check if URL is likely an embed player
   const isEmbedUrl = (url) => {
     if (!url) return false;
     const lowerUrl = url.toLowerCase();
-    return lowerUrl.includes('/embed') || lowerUrl.includes('/player');
+    return (
+      lowerUrl.includes('/embed') ||
+      lowerUrl.includes('/player') ||
+      lowerUrl.includes('krakenfiles.com/embed-video') ||
+      lowerUrl.includes('mega.nz/embed')
+    );
   };
 
-  // Transform Pixeldrain URLs
-  const transformPixeldrainUrl = (url) => {
+  const getSandboxAttribute = (url) => {
+    if (!url) return "allow-scripts allow-same-origin allow-forms allow-popups";
+    const lowerUrl = url.toLowerCase();
+    if (
+      lowerUrl.includes('krakenfiles.com/embed-video') ||
+      lowerUrl.includes('mega.nz/embed')
+    ) {
+      console.log(`Removing sandbox for trusted URL: ${url}`);
+      return null;
+    }
+    return "allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals";
+  };
+
+  const transformUrl = (url) => {
+    if (!url) return url;
+    console.log(`Transforming URL: ${url}`);
+    
     if (url.includes('pixeldrain.com/u/')) {
       const fileId = url.split('/u/')[1].split('?')[0];
-      // Try embed URL first; fall back to direct stream if embed isn't supported
-      return `https://pixeldrain.com/api/file/${fileId}`; // Remove ?download to avoid forcing download
+      const transformed = `https://pixeldrain.com/api/file/${fileId}`;
+      console.log(`Transformed PixelDrain URL to: ${transformed}`);
+      return transformed;
     }
+    
+    if (url.includes('mega.nz/file/')) {
+      const parts = url.split('/file/');
+      if (parts.length > 1) {
+        const fileId = parts[1].split('#')[0];
+        const embedUrl = `https://mega.nz/embed/${fileId}`;
+        console.log(`Transformed Mega file URL to embed: ${embedUrl}`);
+        return embedUrl;
+      }
+    }
+    
+    console.log(`URL passed through unchanged: ${url}`);
     return url;
   };
 
-  // Get anime series URL
   const getAnimeUrl = () => {
     const urlParts = location.pathname.split('/');
     return urlParts.slice(0, -1).join('/');
   };
 
-  // Set initial stream URL and handle fallbacks
   useEffect(() => {
     if (data) {
-      let streamUrl = transformPixeldrainUrl(data.stream_url);
+      console.log("Backend response:", JSON.stringify(data, null, 2));
+      
+      let streamUrl = null;
       let shouldUseVideoTag = false;
 
-      // Prioritize embed URLs for iframe
-      if (!streamUrl || !isValidStreamUrl(streamUrl) || !isEmbedUrl(streamUrl)) {
-        console.warn("Main stream_url invalid or not an embed, checking alternatives...");
-        // Try embed URLs from all_stream_sources
-        streamUrl = data.all_stream_sources?.find(url => isEmbedUrl(transformPixeldrainUrl(url))) ||
-                   data.direct_stream_urls?.find(stream => isEmbedUrl(transformPixeldrainUrl(stream.url)))?.url;
+      console.log("All stream sources:", data.all_stream_sources?.map(transformUrl) || []);
+      console.log("Direct stream URLs:", data.direct_stream_urls?.map(s => ({
+        quality: s.quality,
+        host: s.host,
+        url: transformUrl(s.url)
+      })) || []);
+
+      // Prioritize 480p Krakenfiles from direct_stream_urls
+      const kraken480pStream = data.direct_stream_urls?.find(
+        stream => stream.quality === '480p' && stream.host.toLowerCase().includes('krakenfiles')
+      );
+
+      if (kraken480pStream && isValidStreamUrl(kraken480pStream.url)) {
+        streamUrl = transformUrl(kraken480pStream.url);
+        shouldUseVideoTag = !isEmbedUrl(streamUrl);
+        console.log("Selected 480p Krakenfiles stream:", streamUrl);
+      } else {
+        console.warn("No 480p Krakenfiles stream found, falling back to other sources...");
+        // Fallback to embed URLs
+        streamUrl = data.stream_url && isEmbedUrl(data.stream_url) ? transformUrl(data.stream_url) :
+                    data.all_stream_sources?.find(url => isEmbedUrl(transformUrl(url))) ||
+                    data.direct_stream_urls?.find(stream => isEmbedUrl(transformUrl(stream.url)))?.url ||
+                    // Then any valid stream
+                    data.all_stream_sources?.find(url => isValidStreamUrl(transformUrl(url))) ||
+                    data.direct_stream_urls?.find(stream => isValidStreamUrl(transformUrl(stream.url)))?.url ||
+                    null;
         
-        // If no embed URL, try direct streams with <video> tag
-        if (!streamUrl) {
-          streamUrl = data.all_stream_sources?.find(url => isValidStreamUrl(transformPixeldrainUrl(url))) ||
-                     data.direct_stream_urls?.find(stream => isValidStreamUrl(transformPixeldrainUrl(stream.url)))?.url ||
-                     null;
-          shouldUseVideoTag = streamUrl && !isEmbedUrl(streamUrl);
-        }
+        shouldUseVideoTag = streamUrl && !isEmbedUrl(streamUrl);
       }
 
-      console.log("Selected stream URL:", streamUrl, "Use video tag:", shouldUseVideoTag);
-      setCurrentStreamUrl(streamUrl);
-      setUseVideoTag(shouldUseVideoTag);
-      setIframeKey(prev => prev + 1);
-      setErrorMessage(null);
+      console.log("Final selected stream URL:", streamUrl, "Use video tag:", shouldUseVideoTag);
+      
+      if (!streamUrl) {
+        console.error("No valid stream URL selected");
+        setErrorMessage("No playable stream found. Please try another source.");
+      } else {
+        setCurrentStreamUrl(streamUrl);
+        setUseVideoTag(shouldUseVideoTag);
+        setIframeKey(prev => prev + 1);
+        setErrorMessage(null);
+      }
     }
   }, [data]);
 
-  // Switch to a different stream URL
   const switchStream = (url) => {
-    const transformedUrl = transformPixeldrainUrl(url);
+    const transformedUrl = transformUrl(url);
     if (isValidStreamUrl(transformedUrl)) {
       const shouldUseVideoTag = !isEmbedUrl(transformedUrl);
       console.log("Switching to stream:", transformedUrl, "Use video tag:", shouldUseVideoTag);
@@ -120,11 +171,10 @@ const WatchEpisode = () => {
     }
   };
 
-  // Handle iframe or video loading errors
   const handleStreamError = () => {
     console.error("Stream failed to load:", currentStreamUrl);
     if (data?.all_stream_sources?.length > 1) {
-      const nextUrl = data.all_stream_sources.find(url => url !== currentStreamUrl && isValidStreamUrl(transformPixeldrainUrl(url)));
+      const nextUrl = data.all_stream_sources.find(url => url !== currentStreamUrl && isValidStreamUrl(transformUrl(url)));
       if (nextUrl) {
         console.log("Switching to next stream:", nextUrl);
         switchStream(nextUrl);
@@ -136,7 +186,6 @@ const WatchEpisode = () => {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -166,7 +215,6 @@ const WatchEpisode = () => {
     );
   }
 
-  // Error state
   if (error || !data) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -185,10 +233,10 @@ const WatchEpisode = () => {
     );
   }
 
-  // No stream URLs available
   if (!currentStreamUrl &&
       (!data.all_stream_sources || data.all_stream_sources.length === 0) &&
       (!data.direct_stream_urls || data.direct_stream_urls.length === 0)) {
+    console.error("No streams available. Data:", JSON.stringify(data, null, 2));
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -206,13 +254,11 @@ const WatchEpisode = () => {
     );
   }
 
-  // Render the video player with controls
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 pt-16">
         <div className="container mx-auto px-4 py-8 space-y-6">
-          {/* Back button */}
           <div>
             <Link to={getAnimeUrl()} className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
               <ChevronLeft className="mr-1 h-4 w-4" />
@@ -220,14 +266,12 @@ const WatchEpisode = () => {
             </Link>
           </div>
 
-          {/* Error message */}
           {errorMessage && (
             <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
               {errorMessage}
             </div>
           )}
 
-          {/* Video player */}
           <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border">
             {currentStreamUrl ? (
               useVideoTag ? (
@@ -249,7 +293,7 @@ const WatchEpisode = () => {
                   title={data.title}
                   allowFullScreen
                   className="w-full h-full"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  sandbox={getSandboxAttribute(currentStreamUrl)}
                   onError={handleStreamError}
                 />
               )
@@ -260,10 +304,8 @@ const WatchEpisode = () => {
             )}
           </div>
 
-          {/* Episode title */}
           <h1 className="text-2xl font-bold">{data.title}</h1>
 
-          {/* Stream source selector */}
           {(data.all_stream_sources && data.all_stream_sources.length > 1) && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Stream Sources</h3>
@@ -279,7 +321,7 @@ const WatchEpisode = () => {
                     <DropdownMenuLabel>Available Sources</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {data.all_stream_sources.map((url, index) => {
-                      const transformedUrl = transformPixeldrainUrl(url);
+                      const transformedUrl = transformUrl(url);
                       return (
                         <DropdownMenuItem
                           key={index}
@@ -298,7 +340,6 @@ const WatchEpisode = () => {
             </div>
           )}
 
-          {/* Player controls */}
           <div className="flex flex-wrap justify-between items-center gap-4 border-t border-b border-border py-4">
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-2">
@@ -315,7 +356,6 @@ const WatchEpisode = () => {
               </Button>
             </div>
 
-            {/* Download dropdown */}
             {Object.keys(data.download_links).length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -355,13 +395,13 @@ const WatchEpisode = () => {
             )}
           </div>
 
-          {/* Direct stream URLs */}
           {data.direct_stream_urls && data.direct_stream_urls.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Direct Stream Options</h3>
               <div className="flex flex-wrap gap-2">
                 {data.direct_stream_urls.map((stream, idx) => {
-                  const transformedUrl = transformPixeldrainUrl(stream.url);
+                  const transformedUrl = transformUrl(stream.url);
+                  console.log(`Rendering direct stream option: ${stream.host} - ${stream.quality}, URL: ${transformedUrl}, Valid: ${isValidStreamUrl(transformedUrl)}`);
                   return (
                     <Button
                       key={idx}
