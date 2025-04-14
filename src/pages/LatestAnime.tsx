@@ -14,9 +14,11 @@ const LatestAnime = () => {
     queryKey: ["latestAnime", currentPage],
     queryFn: () => fetchLatestAnime(currentPage),
     placeholderData: (previousData) => previousData,
+    onSettled: () => {
+      setIsChangingPage(false);
+    },
   });
 
-  // Perhatikan perubahan di sini: matikan loading setelah data berubah
   useEffect(() => {
     setIsChangingPage(false);
   }, [data]);

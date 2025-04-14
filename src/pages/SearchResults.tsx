@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnimeGrid from "@/components/AnimeGrid";
+import { toast } from "sonner";
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +34,9 @@ const SearchResults = () => {
     if (searchQuery.trim()) {
       setSearchParams({ q: searchQuery });
       refetch();
+      console.log("Searching for:", searchQuery);
+    } else {
+      toast.error("Please enter a search term");
     }
   };
   
