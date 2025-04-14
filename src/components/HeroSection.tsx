@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Play, Clock } from "lucide-react";
@@ -56,21 +55,21 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
   const isTopAnime = "rating" in activeAnime;
   const isLatestAnime = "episode" in activeAnime;
   
-  // Check if image URL exists and is valid
-  const backgroundImageUrl = activeAnime.image_url || '';
+  // Check if image URL exists and is valid, with fallback
+  const backgroundImageUrl = activeAnime.image_url && activeAnime.image_url !== "N/A" 
+    ? activeAnime.image_url 
+    : "https://via.placeholder.com/1920x1080?text=Anime+Banner";
   
-  // Add fallback image if needed
-  const fallbackBackground = "linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.9))";
-  
+  // Log untuk debugging
+  console.log("Hero Section Active Anime:", activeAnime);
   console.log("Hero Section Image URL:", backgroundImageUrl);
   
   return (
     <div 
       className="relative w-full h-[70vh] bg-cover bg-center bg-no-repeat flex items-end"
       style={{
-        backgroundImage: backgroundImageUrl 
-          ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7), var(--background)), url("${backgroundImageUrl}")`
-          : fallbackBackground,
+        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url("${backgroundImageUrl}")`,
+        backgroundColor: '#1a1a1a', // Fallback warna jika gambar gagal
       }}
     >
       <div className="container mx-auto px-4 pb-16 md:pb-24 mt-auto">

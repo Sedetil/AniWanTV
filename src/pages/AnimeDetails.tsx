@@ -12,10 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const AnimeDetails = () => {
-  const { "*": slug } = useParams<{ "*": string }>();
+  const { "*": slug } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   
@@ -29,21 +29,28 @@ const AnimeDetails = () => {
   });
   
   // Function to extract the correct path for navigation
-  // Function to extract the correct path for navigation
-const getEpisodePath = (fullUrl: string) => {
-  // Extract the episode path and transform it to match router format
-  const path = fullUrl.replace('https://winbu.tv', '');
+  const getEpisodePath = (fullUrl: string) => {
+    // Extract the episode path and transform it to match router format
+    const path = fullUrl.replace('https://winbu.tv', '');
+    
+    // If the URL contains '/episode/' format, return it as is
+    if (path.includes('/episode/')) {
+      return path;
+    }
+    
+    // Otherwise, transform other formats to match /episode/* pattern
+    // Assuming URLs like /devil-may-cry-2025-episode-8/
+    // Transform to /episode/devil-may-cry-2025-episode-8
+    return `/episode${path.endsWith('/') ? path.slice(0, -1) : path}`;
+  };
   
-  // If the URL contains '/episode/' format, return it as is
-  if (path.includes('/episode/')) {
-    return path;
-  }
-  
-  // Otherwise, transform other formats to match /episode/* pattern
-  // Assuming URLs like /devil-may-cry-2025-episode-8/
-  // Transform to /episode/devil-may-cry-2025-episode-8
-  return `/episode${path.endsWith('/') ? path.slice(0, -1) : path}`;
-};
+  // Fallback image jika data.image_url tidak valid
+  const backgroundImageUrl = data?.image_url && data.image_url !== "N/A" 
+    ? data.image_url 
+    : "https://via.placeholder.com/1920x1080?text=Anime+Banner"; // Placeholder lebih sesuai untuk hero section
+
+  // Logging untuk debugging
+  console.log("Background image URL:", backgroundImageUrl);
   
   // Loading state
   if (isLoading) {
@@ -166,10 +173,12 @@ const getEpisodePath = (fullUrl: string) => {
       
       {/* Hero image banner with gradient overlay */}
       <div 
-        className="w-full h-[30vh] bg-cover bg-center relative"
+        className="w-full h-[20vh] md:h-[30vh] bg-cover bg-center relative" // Lebih kecil di mobile
         style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), var(--background)), url(${data.image_url})`,
-          backgroundPosition: 'center 25%'
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.5)), url("${backgroundImageUrl}")`,
+          backgroundPosition: 'center 25%',
+          backgroundColor: 'var(--background, #000)', // Fallback jika gambar tidak dimuat
+          backgroundSize: 'cover',
         }}
       />
       
@@ -190,7 +199,7 @@ const getEpisodePath = (fullUrl: string) => {
               {/* Poster */}
               <div className="aspect-[2/3] overflow-hidden rounded-lg shadow-lg border border-border">
                 <img 
-                  src={data.image_url || "/placeholder.svg"} 
+                  src={data.image_url || "https://via.placeholder.com/300x450?text=Anime+Poster"} 
                   alt={data.title} 
                   className="w-full h-full object-cover"
                 />
