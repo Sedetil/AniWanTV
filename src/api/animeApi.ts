@@ -1,8 +1,7 @@
-
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://cb71fe1b-4ac2-4eaa-8c3b-d3cab3d3e804-00-1bxqvhosxvjn8.worf.replit.dev";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -38,11 +37,19 @@ export interface AnimeDetails {
   episodes: AnimeEpisode[];
 }
 
+export interface StreamSource {
+  quality: string;
+  host: string;
+  url: string;
+}
+
 export interface EpisodeStream {
   title: string;
   stream_url: string;
   download_links: Record<string, Array<{ host: string; url: string }>>;
   player_options: string[];
+  direct_stream_urls: StreamSource[];
+  all_stream_sources: string[];
 }
 
 export interface PaginatedResponse<T> {

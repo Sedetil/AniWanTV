@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -28,6 +27,23 @@ const AnimeDetails = () => {
     queryFn: () => fetchAnimeDetails(animeUrl),
     retry: 1,
   });
+  
+  // Function to extract the correct path for navigation
+  // Function to extract the correct path for navigation
+const getEpisodePath = (fullUrl: string) => {
+  // Extract the episode path and transform it to match router format
+  const path = fullUrl.replace('https://winbu.tv', '');
+  
+  // If the URL contains '/episode/' format, return it as is
+  if (path.includes('/episode/')) {
+    return path;
+  }
+  
+  // Otherwise, transform other formats to match /episode/* pattern
+  // Assuming URLs like /devil-may-cry-2025-episode-8/
+  // Transform to /episode/devil-may-cry-2025-episode-8
+  return `/episode${path.endsWith('/') ? path.slice(0, -1) : path}`;
+};
   
   // Loading state
   if (isLoading) {
@@ -245,7 +261,7 @@ const AnimeDetails = () => {
                   {/* Watch button */}
                   {data.episodes && data.episodes.length > 0 && (
                     <div>
-                      <Link to={data.episodes[0].url.replace('https://winbu.tv', '')}>
+                      <Link to={getEpisodePath(data.episodes[0].url)}>
                         <Button className="gap-2">
                           <Play className="h-5 w-5" />
                           Start Watching
@@ -265,7 +281,7 @@ const AnimeDetails = () => {
                           {episodes.map((episode, index) => (
                             <Link 
                               key={episode.url} 
-                              to={episode.url.replace('https://winbu.tv', '')}
+                              to={getEpisodePath(episode.url)}
                               className="p-3 rounded-md bg-card hover:bg-card/80 border border-border flex items-center justify-between transition-colors"
                             >
                               <span className="text-foreground truncate">{episode.title}</span>
