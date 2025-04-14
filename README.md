@@ -1,73 +1,84 @@
-# Welcome to your Lovable project
+# AniWanTV
 
-## Project info
+AniWanTV is a modern TV streaming platform built with Vite, TypeScript, React, ShadCN UI, and Tailwind CSS. The project aims to provide a responsive, clean UI for streaming TV shows and movies.
 
-**URL**: https://lovable.dev/projects/22b47875-82ae-4d4e-a0a8-a860a8f573ee
+## Features
 
-## How can I edit this code?
+- **User-friendly interface**: Enjoy a smooth experience for browsing content.
+- **Search functionality**: Find your favorite TV shows or movies quickly.
+- **Responsive design**: Works on mobile and desktop devices.
+- **Dark/Light Mode**: Switch between light and dark themes based on user preference.
 
-There are several ways of editing your application.
+## Project Setup
 
-**Use Lovable**
+### 1. Clone the Repository
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/22b47875-82ae-4d4e-a0a8-a860a8f573ee) and start prompting.
+```bash
+git clone https://github.com/Sedetil/AniWanTV.git
+cd AniWanTV
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+### 2. Install Dependencies
 
-**Use your preferred IDE**
+Install all necessary dependencies using npm or yarn:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+or
 
-Follow these steps:
+```bash
+yarn install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 3. Run the Development Server
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+To start the development server and view the application in your browser:
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+By default, the app will be available at `http://localhost:3000`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Technologies Used
 
-**Use GitHub Codespaces**
+- **Vite**: A modern, fast build tool optimized for frontend development.
+- **TypeScript**: A statically typed superset of JavaScript that enhances code quality and scalability.
+- **React**: A JavaScript library for building user interfaces, providing a component-based structure.
+- **ShadCN UI**: A component library for React that provides a set of UI elements for building modern applications.
+- **Tailwind CSS**: A utility-first CSS framework for quickly building custom designs.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+To deploy AniWanTV, you can use platforms like [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/). Simply connect your repository, configure the build settings, and deploy.
 
-This project is built with:
+### Example Deployment on Vercel:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Visit [Vercel](https://vercel.com/).
+2. Sign in with your GitHub account.
+3. Import the repository and deploy.
 
-## How can I deploy this project?
+## Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/22b47875-82ae-4d4e-a0a8-a860a8f573ee) and click on Share -> Publish.
+We welcome contributions to AniWanTV! If you'd like to contribute, please fork the repository and create a pull request with your changes. Before submitting, ensure the following:
 
-## Can I connect a custom domain to my Lovable project?
+- Code follows the project's style guide.
+- Tests are added for new features or bug fixes.
+- Documentation is updated accordingly.
 
-Yes, you can!
+### Issues
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+If you encounter any bugs or issues, please report them by opening an issue on GitHub. We also welcome feature requests and suggestions.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+
+AniWanTV is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+## Acknowledgements
+
+- [Vite](https://vitejs.dev/)
+- [React](https://reactjs.org/)
+- [ShadCN UI](https://github.com/ShadCN/ui)
+- [Tailwind CSS](https://tailwindcss.com/)
