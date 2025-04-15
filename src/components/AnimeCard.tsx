@@ -91,7 +91,7 @@ const AnimeCard = ({
             variant="secondary"
             className="absolute top-2 left-2 bg-accent/80 text-xs font-medium"
           >
-            Ep {anime.episode}
+            {anime.episode}
           </Badge>
         )}
 
@@ -101,7 +101,7 @@ const AnimeCard = ({
             variant="secondary"
             className="absolute top-2 right-2 bg-primary/80 text-xs font-medium"
           >
-            #{anime.rank}
+            {anime.rank}
           </Badge>
         )}
       </div>
