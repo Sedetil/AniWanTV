@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Play, Star } from "lucide-react";
@@ -125,10 +124,19 @@ const AnimeCard = ({
           </div>
         )}
 
-        {/* Views (for Latest Anime) */}
-        {isLatestAnime && anime.views && anime.views !== "N/A" && (
-          <div className="mt-1 text-xs text-muted-foreground">
-            {anime.views} views
+        {/* Views and Duration (for Latest Anime) */}
+        {isLatestAnime && (
+          <div className="flex items-center mt-1 text-xs text-muted-foreground">
+            {anime.views && anime.views !== "N/A" && (
+              <span>{anime.views} views</span>
+            )}
+            {anime.views &&
+              anime.views !== "N/A" &&
+              anime.duration &&
+              anime.duration !== "N/A" && <span className="mx-1">•</span>}
+            {anime.duration && anime.duration !== "N/A" && (
+              <span>{anime.duration}</span>
+            )}
           </div>
         )}
       </div>
