@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -21,12 +21,26 @@ const AnimeDetails = () => {
 
   // Construct full URL from the slug
   const animeUrl = `https://winbu.tv${location.pathname}`;
+  console.log("Constructed anime URL:", animeUrl);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["animeDetails", animeUrl],
     queryFn: () => fetchAnimeDetails(animeUrl),
     retry: 1,
   });
+
+  // Handle success and error logging with useEffect
+  useEffect(() => {
+    if (data) {
+      console.log("Received anime details:", data);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching anime details:", error);
+    }
+  }, [error]);
 
   // Function to extract the correct path for navigation
   const getEpisodePath = (fullUrl: string) => {
