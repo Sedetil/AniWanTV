@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,7 +35,9 @@ const Header = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-background/95 backdrop-blur-md shadow-md" : "bg-transparent"
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md shadow-md"
+          : "bg-background/95"
       }`}
     >
       <div className="container mx-auto px-4 md:px-6">
@@ -47,13 +49,22 @@ const Header = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <nav className="flex items-center space-x-4">
-              <Link to="/" className="text-foreground/80 hover:text-primary transition-colors">
+              <Link
+                to="/"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
                 Home
               </Link>
-              <Link to="/latest" className="text-foreground/80 hover:text-primary transition-colors">
+              <Link
+                to="/latest"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
                 Latest
               </Link>
-              <Link to="/top" className="text-foreground/80 hover:text-primary transition-colors">
+              <Link
+                to="/top"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
                 Top Anime
               </Link>
             </nav>
@@ -68,6 +79,8 @@ const Header = () => {
               />
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             </form>
+
+            <ThemeToggle />
           </div>
 
           {/* Mobile Menu Button */}
@@ -78,11 +91,7 @@ const Header = () => {
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
-            {isOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
       </div>
@@ -101,27 +110,30 @@ const Header = () => {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           </form>
           <nav className="flex flex-col space-y-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}
             >
               Home
             </Link>
-            <Link 
-              to="/latest" 
+            <Link
+              to="/latest"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}
             >
               Latest
             </Link>
-            <Link 
-              to="/top" 
+            <Link
+              to="/top"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}
             >
               Top Anime
             </Link>
+            <div className="pt-2 border-t border-border">
+              <ThemeToggle />
+            </div>
           </nav>
         </div>
       )}
