@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "https://cb71fe1b-4ac2-4eaa-8c3b-d3cab3d3e804-00-1bxqvhosxvjn8.worf.replit.dev";
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -64,6 +64,20 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+export interface ReleaseSchedule {
+  day: string;
+  schedule: Array<{
+    title: string;
+    url: string;
+    image_url: string;
+    rating: string;
+    time: string;
+    genres: string[];
+    type: string;
+  }>;
+  available_days: string[];
+}
+
 // Error handling function
 const handleApiError = (error: unknown): never => {
   const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -84,6 +98,26 @@ export const fetchTopAnime = async (): Promise<TopAnime[]> => {
     
     if (!result.success) {
       throw new Error(result.error || "Failed to fetch top anime");
+    }
+    
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchReleaseSchedule = async (day: string): Promise<ReleaseSchedule> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/release-schedule?day=${day}`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json() as ApiResponse<ReleaseSchedule>;
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch release schedule");
     }
     
     return result.data;

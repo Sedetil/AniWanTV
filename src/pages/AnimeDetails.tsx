@@ -36,9 +36,12 @@ const AnimeDetails = () => {
 
   // Determine the title to display
   // Use the backend title if it's valid, otherwise fall back to the passed title
-  const displayTitle = data?.title && data.title !== "Project Animesu" && data.title !== "Unknown Title"
-    ? data.title
-    : passedTitle;
+  const displayTitle =
+    data?.title &&
+    data.title !== "Project Animesu" &&
+    data.title !== "Unknown Title"
+      ? data.title
+      : passedTitle;
 
   // Function to extract the correct path for navigation
   const getEpisodePath = (fullUrl: string) => {
@@ -105,7 +108,8 @@ const AnimeDetails = () => {
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Error Loading Anime</h1>
             <p className="text-muted-foreground mb-6">
-              We couldn't load the details for this anime. Please try again later.
+              We couldn't load the details for this anime. Please try again
+              later.
             </p>
             <Link to="/">
               <Button>Return to Home</Button>
@@ -269,25 +273,27 @@ const AnimeDetails = () => {
                 </TabsContent>
                 <TabsContent value="episodes" className="space-y-6">
                   {Object.keys(episodeGroups).length > 0 ? (
-                    Object.entries(episodeGroups).map(([groupName, episodes]) => (
-                      <div key={groupName} className="space-y-4">
-                        <h3 className="text-lg font-semibold">{groupName}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                          {episodes.map((episode) => (
-                            <Link
-                              key={episode.url}
-                              to={getEpisodePath(episode.url)}
-                              className="p-3 rounded-md bg-card hover:bg-card/80 border border-border flex items-center justify-between transition-colors"
-                            >
-                              <span className="text-foreground truncate">
-                                {episode.title}
-                              </span>
-                              <Play className="h-4 w-4 text-primary" />
-                            </Link>
-                          ))}
+                    Object.entries(episodeGroups).map(
+                      ([groupName, episodes]) => (
+                        <div key={groupName} className="space-y-4">
+                          <h3 className="text-lg font-semibold">{groupName}</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {episodes.map((episode) => (
+                              <Link
+                                key={episode.url}
+                                to={getEpisodePath(episode.url)}
+                                className="p-3 rounded-md bg-card hover:bg-card/80 border border-border flex items-center justify-between transition-colors"
+                              >
+                                <span className="text-foreground truncate">
+                                  {episode.title}
+                                </span>
+                                <Play className="h-4 w-4 text-primary" />
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      )
+                    )
                   ) : (
                     <div className="py-12 text-center">
                       <p className="text-muted-foreground">

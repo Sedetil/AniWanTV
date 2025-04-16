@@ -4,12 +4,23 @@ import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "./ThemeToggle";
+import { searchAnime } from "@/api/animeApi";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "../hooks/useDebounce";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const navigate = useNavigate();
+
+  const { data: searchResults } = useQuery({
+    queryKey: ["searchAnime", debouncedSearch],
+    queryFn: () => searchAnime(debouncedSearch),
+    enabled: debouncedSearch.length > 2,
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,12 +36,32 @@ const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
-      console.log(`Navigating to search with query: ${encodedQuery}`);
       navigate(`/search?q=${encodedQuery}`);
       setSearchQuery("");
+      setShowResults(false);
       setIsOpen(false);
     }
   };
+
+  const handleResultClick = (url: string, title: string) => {
+    // First navigate to the new path
+    const path = url.replace("https://winbu.tv", "");
+    const newPath = `/anime${path}`;
+    navigate(newPath, { state: { animeTitle: title } });
+
+    // Then reset the states after a short delay
+    setTimeout(() => {
+      setSearchQuery("");
+      setShowResults(false);
+      setIsOpen(false);
+    }, 100);
+  };
+
+  useEffect(() => {
+    setShowResults(
+      debouncedSearch.length > 2 && searchResults && searchResults.length > 0
+    );
+  }, [debouncedSearch, searchResults]);
 
   return (
     <header
@@ -67,18 +98,53 @@ const Header = () => {
               >
                 Top Anime
               </Link>
+              <Link
+                to="/schedule"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
+                Jadwal Rilis
+              </Link>
             </nav>
 
-            <form onSubmit={handleSearch} className="relative">
-              <Input
-                type="search"
-                placeholder="Search anime..."
-                className="pl-9 w-[200px] md:w-[250px] h-9 bg-muted"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            </form>
+            <div className="relative">
+              <form onSubmit={handleSearch} className="relative">
+                <Input
+                  type="search"
+                  placeholder="Search anime..."
+                  className="pl-9 w-[200px] md:w-[250px] h-9 bg-muted"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowResults(true)}
+                  onBlur={() => {
+                    // Increased delay to ensure click events register properly
+                    setTimeout(() => setShowResults(false), 300);
+                  }}
+                />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              </form>
+              {showResults && searchResults && searchResults.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
+                  <div className="max-h-[300px] overflow-y-auto py-1">
+                    {searchResults.map((anime, index) => (
+                      <button
+                        key={index}
+                        className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                        onClick={() =>
+                          handleResultClick(anime.url, anime.title)
+                        }
+                      >
+                        <img
+                          src={anime.image_url}
+                          alt={anime.title}
+                          className="w-8 h-12 object-cover rounded"
+                        />
+                        <span className="flex-1 truncate">{anime.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <ThemeToggle />
           </div>
@@ -99,16 +165,43 @@ const Header = () => {
       {/* Mobile Navigation */}
       {isOpen && (
         <div className="md:hidden bg-card px-4 py-5 animate-fade-in">
-          <form onSubmit={handleSearch} className="relative mb-4">
-            <Input
-              type="search"
-              placeholder="Search anime..."
-              className="pl-9 w-full h-9 bg-muted"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          </form>
+          <div className="relative mb-4">
+            <form onSubmit={handleSearch} className="relative">
+              <Input
+                type="search"
+                placeholder="Search anime..."
+                className="pl-9 w-full h-9 bg-muted"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowResults(true)}
+                onBlur={() => {
+                  // Delay hiding results to allow click events to register
+                  setTimeout(() => setShowResults(false), 200);
+                }}
+              />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            </form>
+            {showResults && searchResults && searchResults.length > 0 && (
+              <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
+                <div className="max-h-[300px] overflow-y-auto py-1">
+                  {searchResults.map((anime, index) => (
+                    <button
+                      key={index}
+                      className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                      onClick={() => handleResultClick(anime.url, anime.title)}
+                    >
+                      <img
+                        src={anime.image_url}
+                        alt={anime.title}
+                        className="w-8 h-12 object-cover rounded"
+                      />
+                      <span className="flex-1 truncate">{anime.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <nav className="flex flex-col space-y-4">
             <Link
               to="/"
