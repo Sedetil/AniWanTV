@@ -18,6 +18,10 @@ const AnimeDetails = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Retrieve the title passed from AnimeCard via navigation state
+  const passedTitle = location.state?.animeTitle || "Unknown Title";
+  console.log("Passed title from AnimeCard:", passedTitle);
+
   // Construct full URL from the slug
   const animeUrl = `https://winbu.tv${location.pathname}`;
 
@@ -29,6 +33,12 @@ const AnimeDetails = () => {
 
   // Debugging: Log the fetched data
   console.log("Fetched anime details:", data);
+
+  // Determine the title to display
+  // Use the backend title if it's valid, otherwise fall back to the passed title
+  const displayTitle = data?.title && data.title !== "Project Animesu" && data.title !== "Unknown Title"
+    ? data.title
+    : passedTitle;
 
   // Function to extract the correct path for navigation
   const getEpisodePath = (fullUrl: string) => {
@@ -181,7 +191,7 @@ const AnimeDetails = () => {
                       ? data.image_url
                       : "https://via.placeholder.com/300x450?text=Anime+Poster"
                   }
-                  alt={data.title}
+                  alt={displayTitle}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -229,7 +239,7 @@ const AnimeDetails = () => {
               </div>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-4">{data.title || "Unknown Anime"}</h1>
+              <h1 className="text-3xl font-bold mb-4">{displayTitle}</h1>
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
