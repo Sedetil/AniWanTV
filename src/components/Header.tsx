@@ -224,6 +224,13 @@ const Header = () => {
             >
               Top Anime
             </Link>
+            <Link
+              to="/schedule"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Jadwal Rilis
+            </Link>
             <div className="pt-2 border-t border-border">
               <ThemeToggle />
             </div>
