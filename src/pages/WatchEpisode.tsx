@@ -34,10 +34,13 @@ const WatchEpisode = () => {
   const [useVideoTag, setUseVideoTag] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // Mengambil judul episode dari state navigasi
+  const episodeTitle = location.state?.episodeTitle || "Unknown Episode";
+
   const handleShare = async () => {
     const shareData = {
-      title: data?.title || "Tonton Anime",
-      text: `Tonton ${data?.title} di AniWanTV`,
+      title: episodeTitle || "Tonton Anime",
+      text: `Tonton ${episodeTitle} di AniWanTV`,
       url: window.location.href,
     };
 
@@ -387,7 +390,7 @@ const WatchEpisode = () => {
             )}
           </div>
 
-          <h1 className="text-2xl font-bold">{data.title}</h1>
+          <h1 className="text-2xl font-bold">{episodeTitle}</h1>
 
           {data.all_stream_sources && data.all_stream_sources.length > 1 && (
             <div className="space-y-2">

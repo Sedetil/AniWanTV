@@ -282,6 +282,7 @@ const AnimeDetails = () => {
                               <Link
                                 key={episode.url}
                                 to={getEpisodePath(episode.url)}
+                                state={{ episodeTitle: episode.title }}
                                 className="p-3 rounded-md bg-card hover:bg-card/80 border border-border flex items-center justify-between transition-colors"
                               >
                                 <span className="text-foreground truncate">

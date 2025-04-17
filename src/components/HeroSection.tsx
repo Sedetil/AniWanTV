@@ -148,7 +148,10 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
             )}
           </div>
 
-          <Link to={`/anime${activeAnime.url.split(".tv")[1]}`}>
+          <Link
+            to={`/anime${activeAnime.url.split(".tv")[1]}`}
+            state={{ animeTitle: activeAnime.title }}
+          >
             <Button size="lg" className="gap-2">
               <Play className="h-5 w-5" />
               <span>Watch Now</span>
