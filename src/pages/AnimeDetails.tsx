@@ -262,7 +262,10 @@ const AnimeDetails = () => {
                   </div>
                   {data.episodes && data.episodes.length > 0 && (
                     <div>
-                      <Link to={getEpisodePath(data.episodes[0].url)}>
+                      <Link
+                        to={getEpisodePath(data.episodes[0].url)}
+                        state={{ episodeTitle: data.episodes[0].title }}
+                      >
                         <Button className="gap-2">
                           <Play className="h-5 w-5" />
                           Start Watching
