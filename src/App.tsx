@@ -11,7 +11,9 @@ import TopAnime from "./pages/TopAnime";
 import AnimeDetails from "./pages/AnimeDetails";
 import WatchEpisode from "./pages/WatchEpisode";
 import SearchResults from "./pages/SearchResults";
+import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +37,7 @@ const App = () => (
             <Route path="/latest" element={<LatestAnime />} />
             <Route path="/top" element={<TopAnime />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/schedule" element={<Schedule />} />
             <Route path="/anime/*" element={<AnimeDetails />} />
             <Route path="/episode/*" element={<WatchEpisode />} />
             <Route path="*" element={<NotFound />} />
