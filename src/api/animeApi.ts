@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "https://aniwan-api.vercel.app";
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -52,8 +52,80 @@ export interface EpisodeStream {
   all_stream_sources: string[];
 }
 
+// Comic interfaces
+export interface ComicBasic {
+  title: string;
+  url: string;
+  image_url: string;
+}
+
+export interface LatestComic extends ComicBasic {
+  type: string;
+  is_colored: boolean;
+  is_hot: boolean;
+  latest_chapter: string;
+  chapter_url: string;
+  update_time: string;
+}
+
+export interface PopularComic extends ComicBasic {
+  author: string;
+  rating: string;
+  rank: string;
+}
+
+export interface ComicCollection extends ComicBasic {
+  genres: string[];
+  rating: string;
+}
+
+export interface ComicChapter {
+  title: string;
+  url: string;
+  update_time: string;
+}
+
+export interface ComicDetails {
+  title: string;
+  image_url: string;
+  rating: string;
+  alternative_titles: string[];
+  status: string;
+  author: string;
+  illustrator: string;
+  demographic: string;
+  type: string;
+  genres: string[];
+  synopsis: string;
+  chapters: ComicChapter[];
+  related_comics: ComicBasic[];
+  last_updated: string;
+}
+
+export interface ChapterImage {
+  url: string;
+  alt: string;
+}
+
+export interface ChapterImages {
+  title: string;
+  description: string;
+  images: ChapterImage[];
+  navigation: {
+    chapter_list?: string;
+    next_chapter?: string;
+    prev_chapter?: string;
+  };
+}
+
 export interface PaginatedResponse<T> {
   anime_list: T[];
+  current_page: number;
+  total_pages: number;
+}
+
+export interface PaginatedComicResponse {
+  comic_list: LatestComic[];
   current_page: number;
   total_pages: number;
 }
@@ -248,6 +320,133 @@ export const searchAnime = async (query: string): Promise<AnimeBasic[]> => {
       throw new Error(result.error || "Failed to search anime");
     }
     console.log("Search results:", result.data);
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+// Comic API functions
+export const fetchLatestComics = async (
+  page = 1
+): Promise<PaginatedComicResponse> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/latest-comics?page=${page}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result =
+      (await response.json()) as ApiResponse<PaginatedComicResponse>;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch latest comics");
+    }
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchPopularComics = async (): Promise<PopularComic[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/popular-comics`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = (await response.json()) as ApiResponse<PopularComic[]>;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch popular comics");
+    }
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchLatestCollections = async (): Promise<ComicCollection[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/latest-collections`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = (await response.json()) as ApiResponse<ComicCollection[]>;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch latest collections");
+    }
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchComicDetails = async (url: string): Promise<ComicDetails> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/comic-details?url=${encodeURIComponent(url)}`
+    );
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = (await response.json()) as ApiResponse<ComicDetails>;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch comic details");
+    }
+    return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchChapterImages = async (chapterSlug: string) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/chapter-images?url=${encodeURIComponent(chapterSlug)}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    // Log the raw response for debugging
+    const text = await response.text();
+    console.log('Raw response from /chapter-images:', text);
+
+    // Attempt to parse the response as JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Failed to parse response as JSON: ${text.substring(0, 100)}...`);
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch chapter images');
+    }
+    return data.data;
+  } catch (error) {
+    console.error('Error in fetchChapterImages:', error);
+    throw error;
+  }
+};
+
+export const searchComics = async (query: string): Promise<ComicBasic[]> => {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+    const searchUrl = `${API_BASE_URL}/search-comics?query=${encodeURIComponent(
+      query
+    )}`;
+    console.log("Search Comics URL:", searchUrl);
+    const response = await fetch(searchUrl);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = (await response.json()) as ApiResponse<ComicBasic[]>;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to search comics");
+    }
+    console.log("Search comics results:", result.data);
     return result.data;
   } catch (error) {
     return handleApiError(error);

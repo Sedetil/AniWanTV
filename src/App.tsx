@@ -13,6 +13,10 @@ import WatchEpisode from "./pages/WatchEpisode";
 import SearchResults from "./pages/SearchResults";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
+import LatestComics from "./pages/LatestComics";
+import PopularComics from "./pages/PopularComics";
+import ComicDetails from "./pages/ComicDetails";
+import ReadChapter from "./pages/ReadChapter";
 
 
 const queryClient = new QueryClient({
@@ -40,6 +44,10 @@ const App = () => (
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/anime/*" element={<AnimeDetails />} />
             <Route path="/episode/*" element={<WatchEpisode />} />
+            <Route path="/comics" element={<LatestComics />} />
+            <Route path="/comics/popular" element={<PopularComics />} />
+            <Route path="/comic/*" element={<ComicDetails />} />
+            <Route path="/read/*" element={<ReadChapter />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -4,7 +4,12 @@ import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "./ThemeToggle";
-import { searchAnime } from "@/api/animeApi";
+import {
+  searchAnime,
+  searchComics,
+  AnimeBasic,
+  ComicBasic,
+} from "@/api/animeApi";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -16,11 +21,42 @@ const Header = () => {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const navigate = useNavigate();
 
-  const { data: searchResults } = useQuery({
+  const { data: animeResults } = useQuery({
     queryKey: ["searchAnime", debouncedSearch],
     queryFn: () => searchAnime(debouncedSearch),
     enabled: debouncedSearch.length > 2,
   });
+
+  const { data: comicResults } = useQuery({
+    queryKey: ["searchComics", debouncedSearch],
+    queryFn: () => searchComics(debouncedSearch),
+    enabled: debouncedSearch.length > 2,
+  });
+
+  useEffect(() => {
+    setShowResults(
+      debouncedSearch.length > 2 &&
+        ((animeResults && animeResults.length > 0) ||
+          (comicResults && comicResults.length > 0))
+    );
+  }, [debouncedSearch, animeResults, comicResults]);
+
+  const handleResultClick = (url: string, title: string) => {
+    let path = url
+      .replace("https://winbu.tv", "")
+      .replace("https://komikindo3.com", "")
+      .replace("/komik", "");
+  
+    const newPath = url.includes("komikindo3.com") ? `/comic${path}` : `/anime${path}`;
+    
+    navigate(newPath, { state: { title } });
+  
+    setTimeout(() => {
+      setSearchQuery("");
+      setShowResults(false);
+      setIsOpen(false);
+    }, 100);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,25 +79,13 @@ const Header = () => {
     }
   };
 
-  const handleResultClick = (url: string, title: string) => {
-    // First navigate to the new path
-    const path = url.replace("https://winbu.tv", "");
-    const newPath = `/anime${path}`;
-    navigate(newPath, { state: { animeTitle: title } });
-
-    // Then reset the states after a short delay
-    setTimeout(() => {
-      setSearchQuery("");
-      setShowResults(false);
-      setIsOpen(false);
-    }, 100);
-  };
-
   useEffect(() => {
     setShowResults(
-      debouncedSearch.length > 2 && searchResults && searchResults.length > 0
+      debouncedSearch.length > 2 &&
+        ((animeResults && animeResults.length > 0) ||
+          (comicResults && comicResults.length > 0))
     );
-  }, [debouncedSearch, searchResults]);
+  }, [debouncedSearch, animeResults, comicResults]);
 
   return (
     <header
@@ -104,6 +128,18 @@ const Header = () => {
               >
                 Jadwal Rilis
               </Link>
+              <Link
+                to="/comics"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
+                Latest Comics
+              </Link>
+              <Link
+                to="/comics/popular"
+                className="text-foreground/80 hover:text-primary transition-colors"
+              >
+                Popular Comics
+              </Link>
             </nav>
 
             <div className="relative">
@@ -122,28 +158,67 @@ const Header = () => {
                 />
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               </form>
-              {showResults && searchResults && searchResults.length > 0 && (
-                <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
-                  <div className="max-h-[300px] overflow-y-auto py-1">
-                    {searchResults.map((anime, index) => (
-                      <button
-                        key={index}
-                        className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
-                        onClick={() =>
-                          handleResultClick(anime.url, anime.title)
-                        }
-                      >
-                        <img
-                          src={anime.image_url}
-                          alt={anime.title}
-                          className="w-8 h-12 object-cover rounded"
-                        />
-                        <span className="flex-1 truncate">{anime.title}</span>
-                      </button>
-                    ))}
+              {showResults &&
+                (animeResults?.length > 0 || comicResults?.length > 0) && (
+                  <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
+                    <div className="max-h-[300px] overflow-y-auto py-1">
+                      {animeResults && animeResults.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                            Anime
+                          </div>
+                          {animeResults.map(
+                            (anime: AnimeBasic, index: number) => (
+                              <button
+                                key={index}
+                                className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                                onClick={() =>
+                                  handleResultClick(anime.url, anime.title)
+                                }
+                              >
+                                <img
+                                  src={anime.image_url}
+                                  alt={anime.title}
+                                  className="w-8 h-12 object-cover rounded"
+                                />
+                                <span className="flex-1 truncate">
+                                  {anime.title}
+                                </span>
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
+                      {comicResults && comicResults.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                            Komik
+                          </div>
+                          {comicResults.map(
+                            (comic: ComicBasic, index: number) => (
+                              <button
+                                key={index}
+                                className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                                onClick={() =>
+                                  handleResultClick(comic.url, comic.title)
+                                }
+                              >
+                                <img
+                                  src={comic.image_url}
+                                  alt={comic.title}
+                                  className="w-8 h-12 object-cover rounded"
+                                />
+                                <span className="flex-1 truncate">
+                                  {comic.title}
+                                </span>
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
             <ThemeToggle />
@@ -169,7 +244,7 @@ const Header = () => {
             <form onSubmit={handleSearch} className="relative">
               <Input
                 type="search"
-                placeholder="Search anime..."
+                placeholder="Search anime & comics..."
                 className="pl-9 w-full h-9 bg-muted"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -181,26 +256,67 @@ const Header = () => {
               />
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             </form>
-            {showResults && searchResults && searchResults.length > 0 && (
-              <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
-                <div className="max-h-[300px] overflow-y-auto py-1">
-                  {searchResults.map((anime, index) => (
-                    <button
-                      key={index}
-                      className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
-                      onClick={() => handleResultClick(anime.url, anime.title)}
-                    >
-                      <img
-                        src={anime.image_url}
-                        alt={anime.title}
-                        className="w-8 h-12 object-cover rounded"
-                      />
-                      <span className="flex-1 truncate">{anime.title}</span>
-                    </button>
-                  ))}
+            {showResults &&
+              (animeResults?.length > 0 || comicResults?.length > 0) && (
+                <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
+                  <div className="max-h-[300px] overflow-y-auto py-1">
+                    {animeResults && animeResults.length > 0 && (
+                      <div>
+                        <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                          Anime
+                        </div>
+                        {animeResults.map(
+                          (anime: AnimeBasic, index: number) => (
+                            <button
+                              key={index}
+                              className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                              onClick={() =>
+                                handleResultClick(anime.url, anime.title)
+                              }
+                            >
+                              <img
+                                src={anime.image_url}
+                                alt={anime.title}
+                                className="w-8 h-12 object-cover rounded"
+                              />
+                              <span className="flex-1 truncate">
+                                {anime.title}
+                              </span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
+                    {comicResults && comicResults.length > 0 && (
+                      <div>
+                        <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                          Komik
+                        </div>
+                        {comicResults.map(
+                          (comic: ComicBasic, index: number) => (
+                            <button
+                              key={index}
+                              className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                              onClick={() =>
+                                handleResultClick(comic.url, comic.title)
+                              }
+                            >
+                              <img
+                                src={comic.image_url}
+                                alt={comic.title}
+                                className="w-8 h-12 object-cover rounded"
+                              />
+                              <span className="flex-1 truncate">
+                                {comic.title}
+                              </span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
           <nav className="flex flex-col space-y-4">
             <Link
@@ -230,6 +346,20 @@ const Header = () => {
               onClick={() => setIsOpen(false)}
             >
               Jadwal Rilis
+            </Link>
+            <Link
+              to="/comics"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Latest Comics
+            </Link>
+            <Link
+              to="/comics/popular"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Popular Comics
             </Link>
             <div className="pt-2 border-t border-border">
               <ThemeToggle />
