@@ -8,10 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
 
 const Schedule = () => {
-  // Set default selected day to "Senin"
   const [selectedDay, setSelectedDay] = useState("senin");
 
-  // Get current day of the week in Indonesian (kept for reference, but not used for default)
   function getCurrentDay() {
     const days = [
       "Minggu",
@@ -31,7 +29,6 @@ const Schedule = () => {
     queryFn: () => fetchReleaseSchedule(selectedDay),
   });
 
-  // Format anime data for AnimeGrid component
   const formatAnimeData = () => {
     if (!data || !data.schedule) return [];
 
@@ -47,7 +44,6 @@ const Schedule = () => {
     }));
   };
 
-  // Fallback available days
   const availableDays =
     data?.available_days?.length > 0
       ? data.available_days
@@ -58,7 +54,7 @@ const Schedule = () => {
       <Header />
       <main className="flex-1 pt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+          <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <Calendar className="w-6 h-6 text-primary" />
               <h1 className="text-3xl font-bold">Jadwal Rilis Anime</h1>
@@ -68,7 +64,6 @@ const Schedule = () => {
               Pilih hari untuk melihat anime yang akan tayang
             </p>
 
-            {/* Day selection buttons */}
             <div className="flex overflow-x-auto pb-2 mb-6 md:flex-wrap gap-2">
               {availableDays.map((day) => (
                 <Button
@@ -87,7 +82,7 @@ const Schedule = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary" />
@@ -105,10 +100,10 @@ const Schedule = () => {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {[...Array(10)].map((_, i) => (
+              <div className="grid grid-cols-6 gap-4">
+                {[...Array(12)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="bg-gray-200 dark:bg-gray-700 rounded-md h-64 mb-2"></div>
+                    <div className="bg-gray-200 dark:bg-gray-700 rounded-md aspect-[2/3] mb-2"></div>
                     <div className="bg-gray-200 dark:bg-gray-700 h-4 rounded mb-2"></div>
                     <div className="bg-gray-200 dark:bg-gray-700 h-3 rounded w-2/3"></div>
                   </div>
@@ -116,9 +111,6 @@ const Schedule = () => {
               </div>
             ) : (
               <AnimeGrid
-                title={`Anime Rilis Hari ${
-                  selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1)
-                }`}
                 animeList={formatAnimeData()}
                 loading={false}
                 aspectRatio="portrait"
