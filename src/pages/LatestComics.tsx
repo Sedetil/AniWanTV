@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Impor gambar bendera
+import japanFlag from "@/assets/images/japan-flag.png";
+import koreaFlag from "@/assets/images/korea-flag.png";
+import chinaFlag from "@/assets/images/china-flag.png";
+
 const LatestComics = () => {
   const [page, setPage] = useState(1);
 
@@ -16,8 +21,77 @@ const LatestComics = () => {
     queryFn: () => fetchLatestComics(page),
   });
 
-  const handleLoadMore = () => {
-    setPage((prev) => prev + 1);
+  // Fungsi untuk mendapatkan gambar bendera berdasarkan tipe komik
+  const getFlagImage = (type) => {
+    switch (type) {
+      case "Manga":
+        return japanFlag;
+      case "Manhwa":
+        return koreaFlag;
+      case "Manhua":
+        return chinaFlag;
+      default:
+        return null;
+    }
+  };
+
+  // Fungsi untuk mendapatkan alt text bendera
+  const getFlagAltText = (type) => {
+    switch (type) {
+      case "Manga":
+        return "Japan Flag";
+      case "Manhwa":
+        return "South Korea Flag";
+      case "Manhua":
+        return "China Flag";
+      default:
+        return "Flag";
+    }
+  };
+
+  // Fungsi untuk menangani perubahan halaman
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= (data?.total_pages || 1)) {
+      setPage(newPage);
+      // Scroll ke atas halaman
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Fungsi untuk membuat array halaman yang akan ditampilkan
+  const getPagination = () => {
+    const totalPages = data?.total_pages || 1;
+    const currentPage = page;
+    let pages = [];
+    
+    // Selalu tampilkan halaman pertama
+    pages.push(1);
+    
+    // Kalkulasi rentang halaman yang akan ditampilkan
+    let start = Math.max(2, currentPage - 2);
+    let end = Math.min(totalPages - 1, currentPage + 2);
+    
+    // Tambahkan ellipsis jika ada jarak dari halaman pertama
+    if (start > 2) {
+      pages.push('...');
+    }
+    
+    // Tambahkan halaman di tengah
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    // Tambahkan ellipsis jika ada jarak ke halaman terakhir
+    if (end < totalPages - 1) {
+      pages.push('...');
+    }
+    
+    // Selalu tampilkan halaman terakhir jika lebih dari 1
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   return (
@@ -62,7 +136,16 @@ const LatestComics = () => {
                             {comic.title}
                           </h3>
                           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <span>{comic.type}</span>
+                            <span className="flex items-center">
+                              {getFlagImage(comic.type) && (
+                                <img
+                                  src={getFlagImage(comic.type)}
+                                  alt={getFlagAltText(comic.type)}
+                                  className="w-5 h-3 mr-1 inline-block object-cover"
+                                />
+                              )}
+                              {comic.type}
+                            </span>
                             {comic.is_colored && (
                               <span className="text-green-500">Colored</span>
                             )}
@@ -81,18 +164,55 @@ const LatestComics = () => {
                 ))}
           </div>
 
-          {data && data.current_page < data.total_pages && (
-            <div className="flex justify-center mt-8">
-              <Button
-                onClick={handleLoadMore}
-                disabled={isFetching}
-                variant="outline"
-                size="lg"
-              >
-                {isFetching ? "Loading..." : "Load More"}
-              </Button>
+          {/* Pagination */}
+          {data && data.total_pages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8">
+              {/* Tampilkan tombol Previous hanya jika tidak berada di halaman 1 */}
+              {page > 1 && (
+                <Button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={isFetching}
+                  variant="outline"
+                  size="sm"
+                >
+                  &lt; Prev
+                </Button>
+              )}
+              
+              {getPagination().map((pageNum, index) => (
+                pageNum === '...' ? (
+                  <span key={`ellipsis-${index}`} className="mx-1">...</span>
+                ) : (
+                  <Button
+                    key={`page-${pageNum}`}
+                    onClick={() => handlePageChange(pageNum)}
+                    disabled={isFetching}
+                    variant={pageNum === page ? "default" : "outline"}
+                    size="sm"
+                    className="min-w-8"
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              ))}
+              
+              {/* Tampilkan tombol Next hanya jika tidak berada di halaman terakhir */}
+              {page < data.total_pages && (
+                <Button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={isFetching}
+                  variant="outline"
+                  size="sm"
+                >
+                  Next &gt;
+                </Button>
+              )}
             </div>
           )}
+          
+          <div className="text-center text-sm text-muted-foreground mt-4">
+            {data && `Page ${page} of ${data.total_pages}`}
+          </div>
         </div>
       </main>
       <Footer />
