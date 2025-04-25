@@ -128,9 +128,12 @@ const SearchResults = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {comicData?.map((comic) => (
                       <Link
-                        key={comic.url}
-                        to={`/comic/${encodeURIComponent(comic.url)}`}
-                        className="block"
+                      key={comic.url}
+                      to={`/comic/${comic.url.replace(
+                        "https://komikindo3.com/komik/",
+                        ""
+                      )}`}
+                      className="block"
                       >
                         <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                           <CardContent className="p-0">

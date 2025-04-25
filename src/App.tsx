@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import DonateButton from "./components/DonateButton";
 import Index from "./pages/Index";
 import LatestAnime from "./pages/LatestAnime";
 import TopAnime from "./pages/TopAnime";
@@ -35,6 +36,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-right" />
+        <DonateButton />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

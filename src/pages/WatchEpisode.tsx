@@ -23,8 +23,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 const WatchEpisode = () => {
   const { "*": slug } = useParams();
@@ -261,7 +259,6 @@ const WatchEpisode = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
         <main className="flex-1 pt-16">
           <div className="container mx-auto px-4 py-8">
             <div className="animate-pulse space-y-8">
@@ -285,7 +282,6 @@ const WatchEpisode = () => {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -293,7 +289,6 @@ const WatchEpisode = () => {
   if (error || !data) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
         <main className="flex-1 pt-24">
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Error Loading Episode</h1>
@@ -305,7 +300,6 @@ const WatchEpisode = () => {
             </Link>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -318,7 +312,6 @@ const WatchEpisode = () => {
     console.error("No streams available. Data:", JSON.stringify(data, null, 2));
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
         <main className="flex-1 pt-24">
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">No Streams Available</h1>
@@ -330,14 +323,12 @@ const WatchEpisode = () => {
             </Link>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <main className="flex-1 pt-16">
         <div className="container mx-auto px-4 py-8 space-y-6">
           <div>
@@ -522,7 +513,6 @@ const WatchEpisode = () => {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

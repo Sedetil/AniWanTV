@@ -4,6 +4,7 @@ import { Play, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TopAnime, LatestAnime } from "@/api/animeApi";
+import { useSwipeable } from "react-swipeable";
 
 interface HeroSectionProps {
   featuredAnime: (TopAnime | LatestAnime)[] | null;
@@ -12,9 +13,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeAnime, setActiveAnime] = useState<TopAnime | LatestAnime | null>(
-    null
-  );
+  const [activeAnime, setActiveAnime] = useState<TopAnime | LatestAnime | null>(null);
 
   // Change featured anime every 8 seconds
   useEffect(() => {
@@ -35,6 +34,17 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
       setActiveAnime(featuredAnime[currentIndex]);
     }
   }, [currentIndex, featuredAnime]);
+
+  const handlers = useSwipeable({
+    onSwipedLeft: () => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % (featuredAnime?.length || 1));
+    },
+    onSwipedRight: () => {
+      setCurrentIndex((prevIndex) => (prevIndex - 1 + (featuredAnime?.length || 1)) % (featuredAnime?.length || 1));
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+  });
 
   if (loading) {
     return (
@@ -63,12 +73,9 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
       ? activeAnime.image_url
       : "https://via.placeholder.com/1920x1080?text=Anime+Banner";
 
-  // Log untuk debugging
-  console.log("Hero Section Active Anime:", activeAnime);
-  console.log("Hero Section Image URL:", backgroundImageUrl);
-
   return (
     <div
+      {...handlers}
       className="relative w-full h-[70vh] bg-cover bg-center bg-no-repeat flex items-end text-white dark:text-white"
       style={{
         backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url("${backgroundImageUrl}")`,
