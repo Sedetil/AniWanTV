@@ -35,7 +35,7 @@ const PopularComics = () => {
               : data?.map((comic) => (
                   <Link
                     key={comic.url}
-                    to={`/comic/${comic.url.replace('https://komikindo3.com/komik/', '')}`}
+                    to={`/comic/${comic.url.replace('https://komikindo4.com/komik/', '')}`}
                     className="block"
                   >
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">

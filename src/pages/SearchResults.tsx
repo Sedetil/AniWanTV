@@ -130,7 +130,7 @@ const SearchResults = () => {
                       <Link
                       key={comic.url}
                       to={`/comic/${comic.url.replace(
-                        "https://komikindo3.com/komik/",
+                        "https://komikindo4.com/komik/",
                         ""
                       )}`}
                       className="block"

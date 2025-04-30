@@ -144,7 +144,7 @@ const Index = () => {
                     <Link
                       key={comic.url}
                       to={`/comic/${comic.url.replace(
-                        "https://komikindo3.com/komik/",
+                        "https://komikindo4.com/komik/",
                         ""
                       )}`}
                       className="block"
@@ -233,7 +233,7 @@ const Index = () => {
                 : popularComics?.slice(0, 6).map((comic) => (
                     <Link
                       key={comic.url}
-                      to={`/comic/${comic.url.replace('https://komikindo3.com/komik/', '')}`}
+                      to={`/comic/${comic.url.replace('https://komikindo4.com/komik/', '')}`}
                       className="block"
                     >
                       <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 h-full bg-card/80 backdrop-blur-sm border border-muted/50">

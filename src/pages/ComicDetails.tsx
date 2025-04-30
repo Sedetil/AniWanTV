@@ -17,7 +17,7 @@ const ComicDetails = () => {
   const comicUrl = decodeURIComponent(location.pathname.replace("/comic/", ""));
   const formattedUrl = comicUrl.startsWith("https://")
     ? comicUrl
-    : `https://komikindo3.com/komik/${comicUrl}`;
+    : `https://komikindo4.com/komik/${comicUrl}`;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["comicDetails", formattedUrl],
