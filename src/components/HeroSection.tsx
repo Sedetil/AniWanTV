@@ -13,7 +13,9 @@ interface HeroSectionProps {
 
 const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeAnime, setActiveAnime] = useState<TopAnime | LatestAnime | null>(null);
+  const [activeAnime, setActiveAnime] = useState<TopAnime | LatestAnime | null>(
+    null
+  );
 
   // Change featured anime every 8 seconds
   useEffect(() => {
@@ -37,10 +39,16 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
 
   const handlers = useSwipeable({
     onSwipedLeft: () => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % (featuredAnime?.length || 1));
+      setCurrentIndex(
+        (prevIndex) => (prevIndex + 1) % (featuredAnime?.length || 1)
+      );
     },
     onSwipedRight: () => {
-      setCurrentIndex((prevIndex) => (prevIndex - 1 + (featuredAnime?.length || 1)) % (featuredAnime?.length || 1));
+      setCurrentIndex(
+        (prevIndex) =>
+          (prevIndex - 1 + (featuredAnime?.length || 1)) %
+          (featuredAnime?.length || 1)
+      );
     },
     touchEventOptions: { passive: false },
     trackMouse: true,

@@ -97,7 +97,7 @@ const Header = () => {
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-gradient">AniWanTV</span>
           </Link>
 
@@ -141,7 +141,7 @@ const Header = () => {
                 Popular
               </Link>
               <a
-                href="#download-app"
+                href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
                 className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium hover:from-blue-600 hover:to-purple-700 whitespace-nowrap"
                 onClick={(e) => {
                   e.preventDefault();
