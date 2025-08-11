@@ -143,7 +143,7 @@ const AnimeCard = ({
 
       {/* Full card is clickable, pass the title in navigation state */}
       <Link
-        to={`/anime${anime.url.split(".tv")[1]}`}
+        to={anime.url.split(".tv")[1]}
         state={{ animeTitle: anime.title }} // Pass the title in the navigation state
         className="absolute inset-0"
         aria-label={anime.title}

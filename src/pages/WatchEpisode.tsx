@@ -133,9 +133,19 @@ const WatchEpisode = () => {
   };
 
   const getAnimeUrl = () => {
-    const urlParts = location.pathname.split("/");
-    return urlParts.slice(0, -1).join("/");
+    const path = location.pathname;
+    if (path.startsWith("/episode/")) {
+      // Ambil slug episode lalu potong sebelum "-episode-..."
+      const episodeSlug = path.replace("/episode/", "").replace(/\/+$/, "");
+      const baseSlug = episodeSlug.replace(/-episode-.+$/i, "");
+      return `/anime/${baseSlug}/`;
+    }
+    // Fallback: jika sudah di /anime/ kembalikan path, jika tidak, pulang ke beranda
+    if (path.startsWith("/anime/")) return path;
+    if (path.startsWith("/episode/")) return path.replace(/^\/episode\//, "/anime/");
+    return "/";
   };
+
 
   useEffect(() => {
     if (data) {

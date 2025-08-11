@@ -42,7 +42,7 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
     onSwipedRight: () => {
       setCurrentIndex((prevIndex) => (prevIndex - 1 + (featuredAnime?.length || 1)) % (featuredAnime?.length || 1));
     },
-    preventDefaultTouchmoveEvent: true,
+    touchEventOptions: { passive: false },
     trackMouse: true,
   });
 
@@ -156,7 +156,7 @@ const HeroSection = ({ featuredAnime, loading = false }: HeroSectionProps) => {
           </div>
 
           <Link
-            to={`/anime${activeAnime.url.split(".tv")[1]}`}
+            to={activeAnime.url.split(".tv")[1]}
             state={{ animeTitle: activeAnime.title }}
           >
             <Button size="lg" className="gap-2">

@@ -47,7 +47,7 @@ const Header = () => {
       .replace("https://komikindo3.com", "")
       .replace("/komik", "");
   
-    const newPath = url.includes("komikindo3.com") ? `/comic${path}` : `/anime${path}`;
+    const newPath = url.includes("komikindo3.com") ? `/comic${path}` : path;
     
     navigate(newPath, { state: { title } });
   
@@ -102,44 +102,54 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <nav className="flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+            <nav className="flex items-center space-x-2 xl:space-x-4">
               <Link
                 to="/"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
                 Home
               </Link>
               <Link
                 to="/latest"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
                 Latest
               </Link>
               <Link
                 to="/top"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
                 Top Anime
               </Link>
               <Link
                 to="/schedule"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
-                Jadwal Rilis
+                Schedule
               </Link>
               <Link
                 to="/comics"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
-                Latest Comics
+                Comics
               </Link>
               <Link
                 to="/comics/popular"
-                className="text-foreground/80 hover:text-primary transition-colors"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
-                Popular Comics
+                Popular
               </Link>
+              <a
+                href="#download-app"
+                className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium hover:from-blue-600 hover:to-purple-700 whitespace-nowrap"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Aplikasi mobile AniWanTV akan segera tersedia! Pantau terus update dari kami.');
+                }}
+              >
+                📱 App
+              </a>
             </nav>
 
             <div className="relative">
@@ -228,7 +238,7 @@ const Header = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -239,7 +249,7 @@ const Header = () => {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden bg-card px-4 py-5 animate-fade-in">
+        <div className="lg:hidden bg-card px-4 py-5 animate-fade-in">
           <div className="relative mb-4">
             <form onSubmit={handleSearch} className="relative">
               <Input
@@ -361,6 +371,17 @@ const Header = () => {
             >
               Popular Comics
             </Link>
+            <a
+              href="#download-app"
+              className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-full text-sm font-medium hover:from-blue-600 hover:to-purple-700 text-center"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsOpen(false);
+                alert('Aplikasi mobile AniWanTV akan segera tersedia! Pantau terus update dari kami.');
+              }}
+            >
+              📱 Download Aplikasi AniWanTV Mobile Sekarang
+            </a>
             <div className="pt-2 border-t border-border">
               <ThemeToggle />
             </div>
