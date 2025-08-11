@@ -97,7 +97,7 @@ const Header = () => {
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-gradient">AniWanTV</span>
           </Link>
 
