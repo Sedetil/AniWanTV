@@ -368,13 +368,8 @@ const Header = () => {
               Popular Comics
             </Link>
             <a
-              href="#download-app"
+              href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
               className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-full text-sm font-medium hover:from-blue-600 hover:to-purple-700 text-center"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsOpen(false);
-                alert('Aplikasi mobile AniWanTV akan segera tersedia! Pantau terus update dari kami.');
-              }}
             >
               📱 Download Aplikasi AniWanTV Mobile Sekarang
             </a>
