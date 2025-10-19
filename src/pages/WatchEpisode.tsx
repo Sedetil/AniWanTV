@@ -23,6 +23,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
+import VideoPlayer from "@/components/VideoPlayer";
 
 const WatchEpisode = () => {
   const { "*": slug } = useParams();
@@ -167,41 +168,53 @@ const WatchEpisode = () => {
         })) || []
       );
 
-      // Prioritize 480p Krakenfiles from direct_stream_urls
-      const kraken480pStream = data.direct_stream_urls?.find(
-        (stream) =>
-          stream.quality === "480p" &&
-          stream.host.toLowerCase().includes("krakenfiles")
+      // Prioritize PixelDrain streams from direct_stream_urls (any quality)
+      const pixeldrainStream = data.direct_stream_urls?.find(
+        (stream) => stream.host.toLowerCase().includes("pixeldrain")
       );
 
-      if (kraken480pStream && isValidStreamUrl(kraken480pStream.url)) {
-        streamUrl = transformUrl(kraken480pStream.url);
+      if (pixeldrainStream && isValidStreamUrl(pixeldrainStream.url)) {
+        streamUrl = transformUrl(pixeldrainStream.url);
         shouldUseVideoTag = !isEmbedUrl(streamUrl);
-        console.log("Selected 480p Krakenfiles stream:", streamUrl);
-      } else {
-        console.warn(
-          "No 480p Krakenfiles stream found, falling back to other sources..."
+        console.log("Selected PixelDrain stream:", streamUrl, `(${pixeldrainStream.quality})`);
+      }
+      // Fallback to 480p Krakenfiles from direct_stream_urls
+      else {
+        const kraken480pStream = data.direct_stream_urls?.find(
+          (stream) =>
+            stream.quality === "480p" &&
+            stream.host.toLowerCase().includes("krakenfiles")
         );
-        // Fallback to embed URLs
-        streamUrl =
-          data.stream_url && isEmbedUrl(data.stream_url)
-            ? transformUrl(data.stream_url)
-            : data.all_stream_sources?.find((url) =>
-                isEmbedUrl(transformUrl(url))
-              ) ||
-              data.direct_stream_urls?.find((stream) =>
-                isEmbedUrl(transformUrl(stream.url))
-              )?.url ||
-              // Then any valid stream
-              data.all_stream_sources?.find((url) =>
-                isValidStreamUrl(transformUrl(url))
-              ) ||
-              data.direct_stream_urls?.find((stream) =>
-                isValidStreamUrl(transformUrl(stream.url))
-              )?.url ||
-              null;
 
-        shouldUseVideoTag = streamUrl && !isEmbedUrl(streamUrl);
+        if (kraken480pStream && isValidStreamUrl(kraken480pStream.url)) {
+          streamUrl = transformUrl(kraken480pStream.url);
+          shouldUseVideoTag = !isEmbedUrl(streamUrl);
+          console.log("Selected 480p Krakenfiles stream:", streamUrl);
+        } else {
+          console.warn(
+            "No PixelDrain or 480p Krakenfiles stream found, falling back to other sources..."
+          );
+          // Fallback to embed URLs
+          streamUrl =
+            data.stream_url && isEmbedUrl(data.stream_url)
+              ? transformUrl(data.stream_url)
+              : data.all_stream_sources?.find((url) =>
+                  isEmbedUrl(transformUrl(url))
+                ) ||
+                data.direct_stream_urls?.find((stream) =>
+                  isEmbedUrl(transformUrl(stream.url))
+                )?.url ||
+                // Then any valid stream
+                data.all_stream_sources?.find((url) =>
+                  isValidStreamUrl(transformUrl(url))
+                ) ||
+                data.direct_stream_urls?.find((stream) =>
+                  isValidStreamUrl(transformUrl(stream.url))
+                )?.url ||
+                null;
+
+          shouldUseVideoTag = streamUrl && !isEmbedUrl(streamUrl);
+        }
       }
 
       console.log(
@@ -357,21 +370,16 @@ const WatchEpisode = () => {
             </div>
           )}
 
-          <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border">
-            {currentStreamUrl ? (
-              useVideoTag ? (
-                <video
-                  key={iframeKey}
-                  src={currentStreamUrl}
-                  title={data.title}
-                  controls
-                  autoPlay
-                  className="w-full h-full"
-                  onError={handleStreamError}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
+          {currentStreamUrl ? (
+            useVideoTag ? (
+              <VideoPlayer
+                key={iframeKey}
+                src={currentStreamUrl}
+                title={data.title}
+                onError={handleStreamError}
+              />
+            ) : (
+              <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border">
                 <iframe
                   key={iframeKey}
                   src={currentStreamUrl}
@@ -381,15 +389,15 @@ const WatchEpisode = () => {
                   sandbox={getSandboxAttribute(currentStreamUrl)}
                   onError={handleStreamError}
                 />
-              )
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted">
-                <p className="text-muted-foreground">
-                  No stream available for this episode
-                </p>
               </div>
-            )}
-          </div>
+            )
+          ) : (
+            <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border flex items-center justify-center">
+              <p className="text-muted-foreground">
+                No stream available for this episode
+              </p>
+            </div>
+          )}
 
           <h1 className="text-2xl font-bold">{episodeTitle}</h1>
 
