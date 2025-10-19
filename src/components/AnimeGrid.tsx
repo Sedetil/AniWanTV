@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AnimeCard from "./AnimeCard";
@@ -7,7 +7,7 @@ import AnimeCardSkeleton from "./AnimeCardSkeleton";
 import { TopAnime, LatestAnime } from "@/api/animeApi";
 
 interface AnimeGridProps {
-  title: string;
+  title: React.ReactNode;
   animeList: (TopAnime | LatestAnime)[];
   loading?: boolean;
   pagination?: {
@@ -32,7 +32,7 @@ const AnimeGrid = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+        <div className="text-2xl font-bold text-foreground">{title}</div>
         
         {pagination && pagination.totalPages > 1 && (
           <div className="flex space-x-2">

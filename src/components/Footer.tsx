@@ -33,6 +33,21 @@ const Footer = () => {
                   Anime Terpopuler
                 </Link>
               </li>
+              <li>
+                <Link to="/comics" className="text-muted-foreground hover:text-primary transition-colors">
+                  Komik Terbaru
+                </Link>
+              </li>
+              <li>
+                <Link to="/comics/popular" className="text-muted-foreground hover:text-primary transition-colors">
+                  Komik Terpopuler
+                </Link>
+              </li>
+              <li>
+                <Link to="/schedule" className="text-muted-foreground hover:text-primary transition-colors">
+                  Schedule
+                </Link>
+              </li>
             </ul>
           </div>
           

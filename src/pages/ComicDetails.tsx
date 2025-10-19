@@ -14,15 +14,13 @@ import { Separator } from "@/components/ui/separator";
 
 const ComicDetails = () => {
   const location = useLocation();
-  const comicUrl = decodeURIComponent(location.pathname.replace("/comic/", ""));
-  const formattedUrl = comicUrl.startsWith("https://")
-    ? comicUrl
-    : `https://komikindo4.com/komik/${comicUrl}`;
+  const comicSlug = decodeURIComponent(location.pathname.replace("/comic/", ""));
+  const comicUrl = `https://komikindo4.com/komik/${comicSlug}/`;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["comicDetails", formattedUrl],
-    queryFn: () => fetchComicDetails(formattedUrl),
-    enabled: !!formattedUrl,
+    queryKey: ["comicDetails", comicUrl],
+    queryFn: () => fetchComicDetails(comicUrl),
+    enabled: !!comicUrl,
   });
 
   // Function to extract the chapter slug from the full URL
@@ -32,9 +30,9 @@ const ComicDetails = () => {
   };
 
   // Function to extract the comic slug from the full URL
-  const getComicSlug = (comicUrl) => {
-    const parts = comicUrl.split("/");
-    return parts[parts.length - 2];
+  const getComicSlug = (fullUrl) => {
+    const match = fullUrl.match(/\/komik\/([^/]+)\/?$/);
+    return match ? match[1] : fullUrl;
   };
 
   if (isLoading) {

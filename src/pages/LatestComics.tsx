@@ -117,10 +117,7 @@ const LatestComics = () => {
               : data?.comic_list.map((comic) => (
                   <Link
                     key={comic.url}
-                    to={`/comic/${comic.url.replace(
-                      "https://komikindo4.com/komik/",
-                      ""
-                    )}`}
+                    to={`/comic/${comic.url.match(/\/komik\/([^/]+)\/?$/)?.[1] || comic.url}`}
                     className="block"
                   >
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">

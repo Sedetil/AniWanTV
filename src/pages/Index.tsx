@@ -49,7 +49,6 @@ const Index = () => {
     if (topAnime && topAnime.length > 0) {
       // Get top 5 anime for featured section
       const featured = topAnime.slice(0, 5);
-      console.log("Setting featured anime:", featured);
       setFeaturedAnime(featured);
     }
   }, [topAnime]);
@@ -96,7 +95,12 @@ const Index = () => {
           {/* Top Anime Section */}
           <section>
             <AnimeGrid
-              title="Top Anime"
+              title={
+                <div className="text-2xl md:text-3xl font-bold relative">
+                  Top Anime
+                  <span className="absolute -bottom-2 left-0 w-16 h-1 bg-primary rounded-full"></span>
+                </div>
+              }
               animeList={topAnime || []}
               loading={topLoading}
               aspectRatio="portrait"
@@ -107,7 +111,12 @@ const Index = () => {
           {/* Latest Releases Section */}
           <section>
             <AnimeGrid
-              title="Latest Releases"
+              title={
+                <div className="text-2xl md:text-3xl font-bold relative">
+                  Latest Releases
+                  <span className="absolute -bottom-2 left-0 w-16 h-1 bg-primary rounded-full"></span>
+                </div>
+              }
               animeList={latestAnime?.anime_list || []}
               loading={latestLoading}
               aspectRatio="portrait"
@@ -143,10 +152,7 @@ const Index = () => {
                 : latestComics?.comic_list.slice(0, 6).map((comic) => (
                     <Link
                       key={comic.url}
-                      to={`/comic/${comic.url.replace(
-                        "https://komikindo4.com/komik/",
-                        ""
-                      )}`}
+                      to={`/comic/${comic.url.match(/\/komik\/([^/]+)\/?$/)?.[1] || comic.url}`}
                       className="block"
                     >
                       <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 h-full bg-card/80 backdrop-blur-sm border border-muted/50">
@@ -233,7 +239,7 @@ const Index = () => {
                 : popularComics?.slice(0, 6).map((comic) => (
                     <Link
                       key={comic.url}
-                      to={`/comic/${comic.url.replace('https://komikindo4.com/komik/', '')}`}
+                      to={`/comic/${comic.url.match(/\/komik\/([^/]+)\/?$/)?.[1] || comic.url}`}
                       className="block"
                     >
                       <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 h-full bg-card/80 backdrop-blur-sm border border-muted/50">

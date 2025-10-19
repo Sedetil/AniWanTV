@@ -42,13 +42,31 @@ const Header = () => {
   }, [debouncedSearch, animeResults, comicResults]);
 
   const handleResultClick = (url: string, title: string) => {
-    let path = url
-      .replace("https://winbu.tv", "")
-      .replace("https://komikindo3.com", "")
-      .replace("/komik", "");
+    console.log("Original URL:", url);
+
+    let path = url;
+
+    // Remove the full domain from the URL
+    path = path.replace(/^https?:\/\/[^/]+/, "");
+    console.log("Path after domain removal:", path);
+
+    // Determine if it's a comic URL based on the original full URL or path structure
+    const isComicUrl = url.includes("komikindo3.com") || url.includes("indo.ch") || url.includes("komikindo.ch") || path.startsWith("/komik/");
+    console.log("Is Comic URL:", isComicUrl);
+
+    let newPath = "";
+    if (isComicUrl) {
+      // If it's a comic URL, ensure it starts with /comic and doesn't have /komik/komik
+      if (path.startsWith("/komik")) {
+        path = path.substring("/komik".length);
+      }
+      newPath = `/comic${path}`;
+    } else {
+      // For anime URLs, just use the cleaned path
+      newPath = path;
+    }
+    console.log("Final newPath for navigation:", newPath);
   
-    const newPath = url.includes("komikindo3.com") ? `/comic${path}` : path;
-    
     navigate(newPath, { state: { title } });
   
     setTimeout(() => {

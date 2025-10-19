@@ -20,7 +20,6 @@ const AnimeDetails = () => {
 
   // Retrieve the title passed from AnimeCard via navigation state
   const passedTitle = location.state?.animeTitle || "Unknown Title";
-  console.log("Passed title from AnimeCard:", passedTitle);
 
   // Construct full URL from the slug
   const animeUrl = `https://winbu.tv${location.pathname}`;
@@ -32,7 +31,6 @@ const AnimeDetails = () => {
   });
 
   // Debugging: Log the fetched data
-  console.log("Fetched anime details:", data);
 
   // Determine the title to display
   // Use the backend title if it's valid, otherwise fall back to the passed title
