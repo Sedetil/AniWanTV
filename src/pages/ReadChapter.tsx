@@ -27,7 +27,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const ReadChapter = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const chapterSlug = location.pathname.replace("/read/", "");
+  // Construct full URL from the slug for chapter images
+  const chapterPath = location.pathname.replace("/read/", "");
+  const chapterUrl = `https://komikindo4.com/${chapterPath}/`;
   const [showControls, setShowControls] = useState(true);
   const [imageLoadStatus, setImageLoadStatus] = useState<Record<number, boolean>>({});
   const [imageErrorStatus, setImageErrorStatus] = useState<Record<number, boolean>>({});
@@ -49,9 +51,9 @@ const ReadChapter = () => {
   };
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["chapterImages", chapterSlug],
-    queryFn: () => fetchChapterImages(chapterSlug),
-    enabled: !!chapterSlug,
+    queryKey: ["chapterImages", chapterUrl],
+    queryFn: () => fetchChapterImages(chapterUrl),
+    enabled: !!chapterUrl,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -82,7 +84,7 @@ const ReadChapter = () => {
         }
       }
     }
-  }, [chapterSlug]);
+  }, [chapterUrl]);
 
   useHotkeys("left", () => {
     if (data?.navigation?.prev_chapter) {
@@ -392,7 +394,7 @@ const ReadChapter = () => {
                     >
                       <Card
                         className={`hover:bg-accent/50 transition-colors border-muted/50 ${
-                          getSlug(chapter.url) === chapterSlug
+                          getSlug(chapter.url) === chapterPath
                             ? "bg-primary/10 border-primary/50"
                             : ""
                         }`}
@@ -579,11 +581,19 @@ const ReadChapter = () => {
                         imageLoadStatus[index] ? "opacity-100" : "opacity-0 absolute inset-0"
                       }`}
                       loading={connectionSpeed === 'slow' ? 'lazy' : 'eager'}
-                      onLoad={() => handleImageLoad(index)}
-                      onError={() => handleImageError(index)}
+                      onLoad={() => {
+                        console.log(`Image ${index} loaded successfully:`, image.url);
+                        handleImageLoad(index);
+                      }}
+                      onError={(e) => {
+                        console.error(`Failed to load image ${index}:`, image.url);
+                        console.error('Error event:', e);
+                        handleImageError(index);
+                      }}
                       style={{
                         display: imageLoadStatus[index] || imageErrorStatus[index] ? "block" : "none",
                       }}
+                      referrerPolicy="no-referrer"
                     />
                   </div>
                 </div>

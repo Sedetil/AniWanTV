@@ -404,10 +404,12 @@ export const fetchComicDetails = async (url: string): Promise<ComicDetails> => {
   }
 };
 
-export const fetchChapterImages = async (chapterSlug: string) => {
+export const fetchChapterImages = async (chapterUrl: string) => {
   try {
+    console.log('Fetching chapter images from URL:', chapterUrl);
+    
     const response = await fetch(
-      `${API_BASE_URL}/chapter-images?url=${encodeURIComponent(chapterSlug)}`,
+      `${API_BASE_URL}/chapter-images?url=${encodeURIComponent(chapterUrl)}`,
       {
         headers: {
           'Accept': 'application/json',

@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/search" element={<SearchResults />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/anime/*" element={<AnimeDetails />} />
+            <Route path="/series/*" element={<AnimeDetails />} />
             <Route path="/episode/*" element={<WatchEpisode />} />
             <Route path="/comics" element={<LatestComics />} />
             <Route path="/comics/popular" element={<PopularComics />} />
