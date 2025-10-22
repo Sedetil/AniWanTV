@@ -30,6 +30,10 @@ const ReadChapter = () => {
   const chapterSlug = location.pathname.replace("/read/", "");
   const [showControls, setShowControls] = useState(true);
   const [imageLoadStatus, setImageLoadStatus] = useState<Record<number, boolean>>({});
+  const [imageErrorStatus, setImageErrorStatus] = useState<Record<number, boolean>>({});
+  const [retryCount, setRetryCount] = useState<Record<number, number>>({});
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
+  const [connectionSpeed, setConnectionSpeed] = useState<'slow' | 'medium' | 'fast'>('medium');
   const [showSettings, setShowSettings] = useState(false);
   const [showChapterList, setShowChapterList] = useState(false);
   const [readingMode, setReadingMode] = useState<"vertical" | "horizontal">(
@@ -63,6 +67,21 @@ const ReadChapter = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // Detect connection speed
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      if (connection) {
+        const effectiveType = connection.effectiveType || '4g';
+        if (effectiveType === 'slow-2g' || effectiveType === '2g') {
+          setConnectionSpeed('slow');
+        } else if (effectiveType === '3g') {
+          setConnectionSpeed('medium');
+        } else {
+          setConnectionSpeed('fast');
+        }
+      }
+    }
   }, [chapterSlug]);
 
   useHotkeys("left", () => {
@@ -117,7 +136,90 @@ const ReadChapter = () => {
 
   const handleImageLoad = (index: number) => {
     setImageLoadStatus((prev) => ({ ...prev, [index]: true }));
+    setImageErrorStatus((prev) => ({ ...prev, [index]: false }));
   };
+
+  const handleImageError = (index: number) => {
+    setImageErrorStatus((prev) => ({ ...prev, [index]: true }));
+    
+    // Auto-retry mechanism (max 3 retries)
+    const currentRetryCount = retryCount[index] || 0;
+    if (currentRetryCount < 3) {
+      setTimeout(() => {
+        setRetryCount((prev) => ({ ...prev, [index]: currentRetryCount + 1 }));
+        // Force image reload by changing src
+        const imgElement = document.getElementById(`chapter-img-${index}`) as HTMLImageElement;
+        if (imgElement) {
+          const originalSrc = imgElement.src;
+          imgElement.src = '';
+          setTimeout(() => {
+            imgElement.src = originalSrc + `?retry=${currentRetryCount + 1}`;
+          }, 100);
+        }
+      }, 1000 * (currentRetryCount + 1)); // Exponential backoff
+    }
+  };
+
+  const manualRetryImage = (index: number) => {
+    setImageErrorStatus((prev) => ({ ...prev, [index]: false }));
+    setRetryCount((prev) => ({ ...prev, [index]: 0 }));
+    
+    const imgElement = document.getElementById(`chapter-img-${index}`) as HTMLImageElement;
+    if (imgElement) {
+      const originalSrc = imgElement.src.split('?')[0]; // Remove any retry params
+      imgElement.src = '';
+      setTimeout(() => {
+        imgElement.src = originalSrc;
+      }, 100);
+    }
+  };
+
+  // Preload adjacent images for smoother reading experience
+  const preloadAdjacentImages = (currentIndex: number) => {
+    if (!data?.images) return;
+    
+    // Adjust preloading strategy based on connection speed
+    let preloadIndices: number[] = [];
+    
+    if (connectionSpeed === 'slow') {
+      // Only preload next image on slow connections
+      preloadIndices = [currentIndex + 1];
+    } else if (connectionSpeed === 'medium') {
+      // Preload previous and next on medium connections
+      preloadIndices = [currentIndex - 1, currentIndex + 1];
+    } else {
+      // Preload more aggressively on fast connections
+      preloadIndices = [
+        currentIndex - 1, // Previous image
+        currentIndex + 1, // Next image
+        currentIndex + 2, // Next next image
+      ];
+    }
+    
+    preloadIndices.forEach((index) => {
+      if (
+        index >= 0 &&
+        index < data.images.length &&
+        !preloadedImages.has(data.images[index].url)
+      ) {
+        const img = new Image();
+        img.src = data.images[index].url;
+        setPreloadedImages((prev) => new Set(prev).add(data.images[index].url));
+      }
+    });
+  };
+
+  // Preload images when component mounts or when current image loads
+  useEffect(() => {
+    const loadedIndexes = Object.keys(imageLoadStatus).filter(
+      (index) => imageLoadStatus[parseInt(index)]
+    );
+    
+    if (loadedIndexes.length > 0) {
+      const lastIndex = Math.max(...loadedIndexes.map(Number));
+      preloadAdjacentImages(lastIndex);
+    }
+  }, [imageLoadStatus, data?.images]);
 
   const calculateProgress = () => {
     if (!data?.images?.length) return 0;
@@ -426,13 +528,64 @@ const ReadChapter = () => {
                   key={index}
                   className={`flex justify-center ${readingMode === "horizontal" ? "snap-center min-w-full flex-shrink-0" : ""}`}
                 >
-                  <img
-                    src={image.url}
-                    alt={image.alt || `Page ${index + 1}`}
-                    className="w-full max-w-[800px] h-auto object-contain rounded-md sm:rounded-lg"
-                    loading="lazy"
-                    onLoad={() => handleImageLoad(index)}
-                  />
+                  <div className="relative w-full max-w-[800px]">
+                    {/* Loading skeleton with retry indicator */}
+                    {!imageLoadStatus[index] && !imageErrorStatus[index] && (
+                      <div className="relative">
+                        <Skeleton className="w-full h-[400px] sm:h-[500px] md:h-[600px] rounded-md sm:rounded-lg" />
+                        {(retryCount[index] || 0) > 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-md sm:rounded-lg">
+                            <div className="text-center space-y-2">
+                              <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto"></div>
+                              <p className="text-sm text-muted-foreground">
+                                Retrying... ({retryCount[index] || 0}/3)
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Error state with retry button */}
+                    {imageErrorStatus[index] && (
+                      <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] flex flex-col items-center justify-center bg-muted/30 rounded-md sm:rounded-lg p-4">
+                        <div className="text-center space-y-4">
+                          <div className="text-muted-foreground">
+                            <p className="text-lg font-medium">Failed to load image</p>
+                            <p className="text-sm">Page {index + 1}</p>
+                            <p className="text-xs mt-2">
+                              Retry attempts: {retryCount[index] || 0}/3
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => manualRetryImage(index)}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <RotateCw className="h-4 w-4" />
+                            Retry
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Actual image */}
+                    <img
+                      id={`chapter-img-${index}`}
+                      src={image.url}
+                      alt={image.alt || `Page ${index + 1}`}
+                      className={`w-full h-auto object-contain rounded-md sm:rounded-lg transition-opacity duration-300 ${
+                        imageLoadStatus[index] ? "opacity-100" : "opacity-0 absolute inset-0"
+                      }`}
+                      loading={connectionSpeed === 'slow' ? 'lazy' : 'eager'}
+                      onLoad={() => handleImageLoad(index)}
+                      onError={() => handleImageError(index)}
+                      style={{
+                        display: imageLoadStatus[index] || imageErrorStatus[index] ? "block" : "none",
+                      }}
+                    />
+                  </div>
                 </div>
               ))
             ) : (

@@ -5,6 +5,7 @@ import {
   fetchAnimeDetails,
   AnimeDetails as IAnimeDetails,
   AnimeEpisode,
+  RelatedAnime,
 } from "@/api/animeApi";
 import { ChevronLeft, Play, Calendar, Star, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -258,6 +259,7 @@ const AnimeDetails = () => {
                       {data.synopsis || "No synopsis available for this anime."}
                     </p>
                   </div>
+
                   {data.episodes && data.episodes.length > 0 && (
                     <div>
                       <Link
@@ -271,6 +273,51 @@ const AnimeDetails = () => {
                       </Link>
                     </div>
                   )}
+                  
+                  {/* Related Anime Section */}
+                  {data.related_anime && data.related_anime.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold">Related Anime</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {data.related_anime.map((anime: RelatedAnime, index: number) => (
+                          <Link
+                            key={index}
+                            to={anime.url.replace("https://winbu.tv", "")}
+                            className="group space-y-2"
+                          >
+                            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted">
+                              <img
+                                src={
+                                  anime.image_url && anime.image_url !== "N/A"
+                                    ? anime.image_url
+                                    : "https://via.placeholder.com/300x450?text=Anime+Poster"
+                                }
+                                alt={anime.title}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {anime.title}
+                              </h3>
+                              {anime.rating && anime.rating !== "N/A" && (
+                                <div className="flex items-center gap-1">
+                                  <Star
+                                    className="h-3 w-3 text-yellow-500"
+                                    fill="currentColor"
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {anime.rating}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                 </TabsContent>
                 <TabsContent value="episodes" className="space-y-6">
                   {Object.keys(episodeGroups).length > 0 ? (

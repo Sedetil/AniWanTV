@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "https://web-production-f6fa7.up.railway.app";
+const API_BASE_URL = "http://192.168.1.34:5000";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -27,6 +27,13 @@ export interface AnimeEpisode {
   url: string;
 }
 
+export interface RelatedAnime {
+  title: string;
+  url: string;
+  image_url: string;
+  rating: string;
+}
+
 export interface AnimeDetails {
   title: string;
   image_url: string;
@@ -35,6 +42,7 @@ export interface AnimeDetails {
   genres: string[];
   synopsis: string;
   episodes: AnimeEpisode[];
+  related_anime?: RelatedAnime[];
 }
 
 export interface StreamSource {
