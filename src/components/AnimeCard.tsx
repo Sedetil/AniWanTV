@@ -13,6 +13,7 @@ interface AnimeCardProps {
   width?: number;
   height?: number;
   viewType?: "grid" | "list";
+  isDonghua?: boolean;
 }
 
 const AnimeCard = ({
@@ -22,6 +23,7 @@ const AnimeCard = ({
   width,
   height,
   viewType = "grid",
+  isDonghua = false,
 }: AnimeCardProps) => {
   const [imageError, setImageError] = useState(false);
 
@@ -143,7 +145,7 @@ const AnimeCard = ({
 
       {/* Full card is clickable, pass the title in navigation state */}
       <Link
-        to={anime.url.split(".tv")[1]}
+        to={isDonghua ? `/donghua${anime.url.replace("https://animexin.dev", "")}` : anime.url.split(".tv")[1]}
         state={{ animeTitle: anime.title }} // Pass the title in the navigation state
         className="absolute inset-0"
         aria-label={anime.title}

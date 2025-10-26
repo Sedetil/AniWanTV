@@ -7,8 +7,10 @@ import ThemeToggle from "./ThemeToggle";
 import {
   searchAnime,
   searchComics,
+  searchDonghua,
   AnimeBasic,
   ComicBasic,
+  AnimexinBasic,
 } from "@/api/animeApi";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
@@ -33,15 +35,22 @@ const Header = () => {
     enabled: debouncedSearch.length > 2,
   });
 
+  const { data: donghuaResults } = useQuery({
+    queryKey: ["searchDonghua", debouncedSearch],
+    queryFn: () => searchDonghua(debouncedSearch),
+    enabled: debouncedSearch.length > 2,
+  });
+
   useEffect(() => {
     setShowResults(
       debouncedSearch.length > 2 &&
         ((animeResults && animeResults.length > 0) ||
-          (comicResults && comicResults.length > 0))
+          (comicResults && comicResults.length > 0) ||
+          (donghuaResults && donghuaResults.length > 0))
     );
-  }, [debouncedSearch, animeResults, comicResults]);
+  }, [debouncedSearch, animeResults, comicResults, donghuaResults]);
 
-  const handleResultClick = (url: string, title: string) => {
+  const handleResultClick = (url: string, title: string, type?: string) => {
     console.log("Original URL:", url);
 
     let path = url;
@@ -52,7 +61,10 @@ const Header = () => {
 
     // Determine if it's a comic URL based on the original full URL or path structure
     const isComicUrl = url.includes("komikindo3.com") || url.includes("indo.ch") || url.includes("komikindo.ch") || path.startsWith("/komik/");
+    // Determine if it's a donghua URL based on the type parameter or URL structure
+    const isDonghuaUrl = type === "donghua" || url.includes("animexin.dev");
     console.log("Is Comic URL:", isComicUrl);
+    console.log("Is Donghua URL:", isDonghuaUrl);
 
     let newPath = "";
     if (isComicUrl) {
@@ -61,6 +73,9 @@ const Header = () => {
         path = path.substring("/komik".length);
       }
       newPath = `/comic${path}`;
+    } else if (isDonghuaUrl) {
+      // For donghua URLs, navigate to the donghua details page
+      newPath = `/donghua${path}`;
     } else {
       // For anime URLs, just use the cleaned path
       newPath = path;
@@ -101,9 +116,10 @@ const Header = () => {
     setShowResults(
       debouncedSearch.length > 2 &&
         ((animeResults && animeResults.length > 0) ||
-          (comicResults && comicResults.length > 0))
+          (comicResults && comicResults.length > 0) ||
+          (donghuaResults && donghuaResults.length > 0))
     );
-  }, [debouncedSearch, animeResults, comicResults]);
+  }, [debouncedSearch, animeResults, comicResults, donghuaResults]);
 
   return (
     <header
@@ -147,6 +163,12 @@ const Header = () => {
                 Schedule
               </Link>
               <Link
+                to="/donghua"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
+              >
+                Donghua
+              </Link>
+              <Link
                 to="/comics"
                 className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
@@ -157,6 +179,12 @@ const Header = () => {
                 className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
               >
                 Popular
+              </Link>
+              <Link
+                to="/bookmarks"
+                className="text-foreground/80 hover:text-primary transition-colors text-sm xl:text-base"
+              >
+                Bookmarks
               </Link>
               <a
                 href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
@@ -170,7 +198,7 @@ const Header = () => {
               <form onSubmit={handleSearch} className="relative">
                 <Input
                   type="search"
-                  placeholder="Search anime..."
+                  placeholder="Search anime, comics, donghua..."
                   className="pl-9 w-[200px] md:w-[250px] h-9 bg-muted"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -183,7 +211,7 @@ const Header = () => {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               </form>
               {showResults &&
-                (animeResults?.length > 0 || comicResults?.length > 0) && (
+                (animeResults?.length > 0 || comicResults?.length > 0 || donghuaResults?.length > 0) && (
                   <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
                     <div className="max-h-[300px] overflow-y-auto py-1">
                       {animeResults && animeResults.length > 0 && (
@@ -240,6 +268,33 @@ const Header = () => {
                           )}
                         </div>
                       )}
+                      {donghuaResults && donghuaResults.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                            Donghua
+                          </div>
+                          {donghuaResults.map(
+                            (donghua: AnimexinBasic, index: number) => (
+                              <button
+                                key={index}
+                                className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                                onClick={() =>
+                                  handleResultClick(donghua.url, donghua.title, "donghua")
+                                }
+                              >
+                                <img
+                                  src={donghua.image}
+                                  alt={donghua.title}
+                                  className="w-8 h-12 object-cover rounded"
+                                />
+                                <span className="flex-1 truncate">
+                                  {donghua.title}
+                                </span>
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -268,7 +323,7 @@ const Header = () => {
             <form onSubmit={handleSearch} className="relative">
               <Input
                 type="search"
-                placeholder="Search anime & comics..."
+                placeholder="Search anime, comics, donghua..."
                 className="pl-9 w-full h-9 bg-muted"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -281,7 +336,7 @@ const Header = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             </form>
             {showResults &&
-              (animeResults?.length > 0 || comicResults?.length > 0) && (
+              (animeResults?.length > 0 || comicResults?.length > 0 || donghuaResults?.length > 0) && (
                 <div className="absolute top-full mt-1 w-full bg-popover rounded-md shadow-lg overflow-hidden z-50">
                   <div className="max-h-[300px] overflow-y-auto py-1">
                     {animeResults && animeResults.length > 0 && (
@@ -338,6 +393,33 @@ const Header = () => {
                         )}
                       </div>
                     )}
+                    {donghuaResults && donghuaResults.length > 0 && (
+                      <div>
+                        <div className="px-4 py-2 text-sm font-semibold text-muted-foreground bg-muted">
+                          Donghua
+                        </div>
+                        {donghuaResults.map(
+                          (donghua: AnimexinBasic, index: number) => (
+                            <button
+                              key={index}
+                              className="w-full px-4 py-2 text-left hover:bg-accent flex items-center space-x-2"
+                              onClick={() =>
+                                handleResultClick(donghua.url, donghua.title, "donghua")
+                              }
+                            >
+                              <img
+                                src={donghua.image}
+                                alt={donghua.title}
+                                className="w-8 h-12 object-cover rounded"
+                              />
+                              <span className="flex-1 truncate">
+                                {donghua.title}
+                              </span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -372,6 +454,13 @@ const Header = () => {
               Jadwal Rilis
             </Link>
             <Link
+              to="/donghua"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Donghua
+            </Link>
+            <Link
               to="/comics"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}
@@ -384,6 +473,13 @@ const Header = () => {
               onClick={() => setIsOpen(false)}
             >
               Popular Comics
+            </Link>
+            <Link
+              to="/bookmarks"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              My Bookmarks
             </Link>
             <a
               href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
@@ -402,3 +498,4 @@ const Header = () => {
 };
 
 export default Header;
+

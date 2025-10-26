@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  fetchTopAnime, 
-  fetchLatestAnime, 
-  fetchLatestComics, 
+import {
+  fetchTopAnime,
+  fetchLatestAnime,
+  fetchLatestComics,
   fetchPopularComics,
-  TopAnime, 
-  LatestAnime 
+  fetchAnimexinPopularToday,
+  TopAnime,
+  LatestAnime,
+  AnimexinPopularToday
 } from "@/api/animeApi";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,6 +17,8 @@ import AnimeGrid from "@/components/AnimeGrid";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import useScrollAnimation from "@/hooks/useScrollAnimation";
 
 // Import flag images
 import japanFlag from "@/assets/images/japan-flag.png";
@@ -42,6 +46,11 @@ const Index = () => {
   const { data: popularComics, isLoading: popularComicsLoading } = useQuery({
     queryKey: ['popularComics'],
     queryFn: fetchPopularComics,
+  });
+
+  const { data: popularDonghua, isLoading: popularDonghuaLoading } = useQuery({
+    queryKey: ['animexinPopularToday'],
+    queryFn: fetchAnimexinPopularToday,
   });
   
   // Set featured anime from top and latest anime
@@ -88,12 +97,18 @@ const Index = () => {
         {/* Hero Section */}
         <HeroSection
           featuredAnime={featuredAnime}
-          loading={topLoading}
+          featuredComics={latestComics?.comic_list.slice(0, 5) || null}
+          loading={topLoading || latestComicsLoading}
         />
         
         <div className="container mx-auto px-4 py-10 space-y-12">
           {/* Top Anime Section */}
-          <section>
+          <motion.section
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             <AnimeGrid
               title={
                 <div className="text-2xl md:text-3xl font-bold relative">
@@ -106,10 +121,15 @@ const Index = () => {
               aspectRatio="portrait"
               viewType="grid"
             />
-          </section>
+          </motion.section>
           
           {/* Latest Releases Section */}
-          <section>
+          <motion.section
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <AnimeGrid
               title={
                 <div className="text-2xl md:text-3xl font-bold relative">
@@ -122,10 +142,16 @@ const Index = () => {
               aspectRatio="portrait"
               viewType="grid"
             />
-          </section>
+          </motion.section>
 
           {/* Latest Comics Section with Modern Design */}
-          <section className="relative">
+          <motion.section
+            className="relative"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl md:text-3xl font-bold relative">
                 Latest Comics
@@ -209,10 +235,16 @@ const Index = () => {
                     </Link>
                   ))}
             </div>
-          </section>
+          </motion.section>
 
           {/* Popular Comics Section with Modern Design */}
-          <section className="relative pt-6">
+          <motion.section
+            className="relative pt-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl md:text-3xl font-bold relative">
                 Popular Comics
@@ -282,7 +314,77 @@ const Index = () => {
                     </Link>
                   ))}
             </div>
-          </section>
+          </motion.section>
+
+          {/* Donghua Section */}
+          <motion.section
+            className="relative"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold relative">
+                Popular Donghua
+                <span className="absolute -bottom-2 left-0 w-16 h-1 bg-primary rounded-full"></span>
+              </h2>
+              <Link to="/donghua" className="text-sm font-medium text-primary hover:underline flex items-center">
+                View All <i className="fas fa-arrow-right ml-1 text-xs"></i>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {popularDonghuaLoading
+                ? Array.from({ length: 6 }).map((_, index) => (
+                    <Card key={index} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <Skeleton className="h-48 md:h-56 w-full" />
+                        <div className="p-2 md:p-3">
+                          <Skeleton className="h-4 w-3/4 mb-2" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                : popularDonghua?.slice(0, 6).map((donghua) => (
+                    <Link
+                      key={donghua.url}
+                      to={`/donghua`}
+                      className="block"
+                    >
+                      <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 h-full bg-card/80 backdrop-blur-sm border border-muted/50">
+                        <CardContent className="p-0 relative">
+                          <div className="relative">
+                            <img
+                              src={donghua.image}
+                              alt={donghua.title}
+                              className="w-full h-48 md:h-56 object-cover"
+                              loading="lazy"
+                            />
+                            {/* Gradient overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/70 to-transparent"></div>
+                            {/* Episode info */}
+                            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
+                              <span className="text-xs text-white font-medium px-2 py-1 bg-black/50 rounded-md">
+                                {donghua.episode}
+                              </span>
+                              <span className="text-xs text-white px-2 py-1 bg-black/50 rounded-md">
+                                {donghua.type}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-semibold line-clamp-1 mb-2 text-sm">
+                              {donghua.title}
+                            </h3>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+            </div>
+          </motion.section>
         </div>
       </main>
       <Footer />

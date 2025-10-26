@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "react-router-dom";
 import { fetchComicDetails } from "@/api/animeApi";
@@ -5,23 +6,64 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
-import { ChevronRight, Calendar, Star, User, Book, Info } from "lucide-react";
+import { ChevronRight, Calendar, Star, User, Book, Info, Search, Bookmark as BookmarkIcon, BookmarkCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+  getBookmark,
+  updateCategory,
+  updateProgress,
+  extractChapterNumber,
+} from "@/utils/bookmarkUtils";
+import { Bookmark as BookmarkType } from "@/types/bookmark";
+import { toast } from "sonner";
 
 const ComicDetails = () => {
   const location = useLocation();
   const comicSlug = decodeURIComponent(location.pathname.replace("/comic/", ""));
   const comicUrl = `https://komikindo4.com/komik/${comicSlug}/`;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isBookmarkedState, setIsBookmarkedState] = useState(false);
+  const [bookmarkData, setBookmarkData] = useState<BookmarkType | null>(null);
+  const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<BookmarkType["category"]>("Sedang Dibaca");
+  
+  // Normalize slug for consistent bookmark ID
+  const normalizedSlug = comicSlug.trim().toLowerCase();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["comicDetails", comicUrl],
     queryFn: () => fetchComicDetails(comicUrl),
     enabled: !!comicUrl,
   });
+
+  // Check if comic is bookmarked
+  useEffect(() => {
+    if (normalizedSlug) {
+      const bookmarked = isBookmarked(normalizedSlug);
+      setIsBookmarkedState(bookmarked);
+      
+      if (bookmarked) {
+        const bookmark = getBookmark(normalizedSlug);
+        setBookmarkData(bookmark);
+        setSelectedCategory(bookmark?.category || "Sedang Dibaca");
+      }
+    }
+  }, [normalizedSlug]);
 
   // Function to extract the chapter slug from the full URL
   const getChapterSlug = (chapterUrl) => {
@@ -33,6 +75,68 @@ const ComicDetails = () => {
   const getComicSlug = (fullUrl) => {
     const match = fullUrl.match(/\/komik\/([^/]+)\/?$/);
     return match ? match[1] : fullUrl;
+  };
+
+  const handleAddBookmark = () => {
+    if (!data || !normalizedSlug) return;
+    
+    const bookmark = {
+      id: normalizedSlug,
+      title: data.title,
+      type: "komik" as const,
+      lastProgress: 0,
+      category: selectedCategory,
+      imageUrl: data.image_url,
+    };
+    
+    addBookmark(bookmark);
+    setIsBookmarkedState(true);
+    setBookmarkData(getBookmark(normalizedSlug));
+    setShowBookmarkDialog(false);
+    toast.success("Comic added to bookmarks!");
+  };
+
+  const handleRemoveBookmark = () => {
+    if (!normalizedSlug) return;
+    
+    removeBookmark(normalizedSlug);
+    setIsBookmarkedState(false);
+    setBookmarkData(null);
+    toast.success("Comic removed from bookmarks!");
+  };
+
+  const handleUpdateCategory = (category: BookmarkType["category"]) => {
+    if (!normalizedSlug) return;
+    
+    updateCategory(normalizedSlug, category);
+    const updated = getBookmark(normalizedSlug);
+    setBookmarkData(updated);
+    setSelectedCategory(category);
+    toast.success("Bookmark category updated!");
+  };
+
+  const handleChapterClick = (chapter: any) => {
+    // Update progress when chapter is clicked
+    if (normalizedSlug) {
+      // Check if bookmark exists, if not create it
+      if (!isBookmarked(normalizedSlug)) {
+        const bookmark = {
+          id: normalizedSlug,
+          title: data.title,
+          type: "komik" as const,
+          lastProgress: 0,
+          category: "Sedang Dibaca" as const,
+          imageUrl: data.image_url,
+        };
+        addBookmark(bookmark);
+        setIsBookmarkedState(true);
+        setBookmarkData(getBookmark(normalizedSlug));
+      }
+      
+      // Update progress
+      const chapterNumber = extractChapterNumber(chapter.title);
+      updateProgress(normalizedSlug, chapterNumber);
+    }
   };
 
   if (isLoading) {
@@ -216,6 +320,89 @@ const ComicDetails = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Bookmark Section */}
+                <Card className="border border-muted/40 shadow-sm overflow-hidden">
+                  <CardContent className="p-4">
+                    {isBookmarkedState ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <BookmarkCheck className="h-5 w-5 text-primary" />
+                            <span className="text-sm font-medium">Bookmarked</span>
+                            {bookmarkData && (
+                              <Badge variant="secondary" className="text-xs">
+                                {bookmarkData.category}
+                              </Badge>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoveBookmark}
+                            className="text-destructive hover:bg-destructive/10"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Category:</span>
+                          <Select
+                            value={selectedCategory}
+                            onValueChange={(value) => handleUpdateCategory(value as BookmarkType["category"])}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Sedang Dibaca">Sedang Dibaca</SelectItem>
+                              <SelectItem value="Favorit">Favorit</SelectItem>
+                              <SelectItem value="Selesai">Selesai</SelectItem>
+                              <SelectItem value="Ingin Ditonton">Ingin Ditonton</SelectItem>
+                              <SelectItem value="Ingin Dibaca">Ingin Dibaca</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {bookmarkData && bookmarkData.lastProgress > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            Last read: Chapter {bookmarkData.lastProgress}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Category:</span>
+                          <Select
+                            value={selectedCategory}
+                            onValueChange={(value) => setSelectedCategory(value as BookmarkType["category"])}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Sedang Dibaca">Sedang Dibaca</SelectItem>
+                              <SelectItem value="Favorit">Favorit</SelectItem>
+                              <SelectItem value="Selesai">Selesai</SelectItem>
+                              <SelectItem value="Ingin Ditonton">Ingin Ditonton</SelectItem>
+                              <SelectItem value="Ingin Dibaca">Ingin Dibaca</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="w-full gap-2"
+                          onClick={handleAddBookmark}
+                        >
+                          <BookmarkIcon className="h-4 w-4" />
+                          Add to Bookmarks
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </motion.div>
             </div>
 
@@ -272,19 +459,33 @@ const ComicDetails = () => {
                 <TabsContent value="chapters" className="mt-0">
                   <Card className="border border-muted/40 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                     <CardContent className="p-0">
-                      <div className="p-4 border-b border-border flex items-center justify-between">
+                      <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <h3 className="font-semibold flex items-center">
                           <Book className="h-5 w-5 mr-2 text-primary" />
                           All Chapters
                         </h3>
-                        <div className="text-sm text-muted-foreground">
-                          {data.chapters?.length || 0} chapters
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm text-muted-foreground">
+                            {data.chapters?.length || 0} chapters
+                          </div>
+                          <div className="relative w-full sm:w-auto">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder="Search chapters..."
+                              className="pl-10 pr-4 py-2 w-full sm:w-64 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
 
                       <ScrollArea className="h-[400px] md:h-[500px]">
                         <div className="divide-y divide-border">
-                          {data.chapters?.map((chapter, index) => {
+                          {data.chapters?.filter((chapter) =>
+                            chapter.title.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).map((chapter, index) => {
                             // Check if this is the latest chapter
                             const isLatest = index === 0;
 
@@ -292,7 +493,10 @@ const ComicDetails = () => {
                               <Link
                                 key={chapter.url}
                                 to={`/read/${getChapterSlug(chapter.url)}`}
-                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                onClick={() => {
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  handleChapterClick(chapter);
+                                }}
                               >
                                 <div className={`p-3 md:p-4 flex justify-between items-center hover:bg-accent/50 transition-colors ${
                                   isLatest ? "bg-primary/5" : ""
@@ -312,6 +516,14 @@ const ComicDetails = () => {
                               </Link>
                             );
                           })}
+                          
+                          {searchQuery && data.chapters?.filter((chapter) =>
+                            chapter.title.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length === 0 && (
+                            <div className="p-8 text-center text-muted-foreground">
+                              <p>No chapters found matching "{searchQuery}"</p>
+                            </div>
+                          )}
                         </div>
                       </ScrollArea>
                     </CardContent>

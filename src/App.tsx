@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "next-themes";
 import DonateButton from "./components/DonateButton";
@@ -18,6 +19,10 @@ import LatestComics from "./pages/LatestComics";
 import PopularComics from "./pages/PopularComics";
 import ComicDetails from "./pages/ComicDetails";
 import ReadChapter from "./pages/ReadChapter";
+import Bookmarks from "./pages/Bookmarks";
+import Donghua from "./pages/Donghua";
+import DonghuaDetails from "./pages/DonghuaDetails";
+import WatchDonghuaEpisode from "./pages/WatchDonghuaEpisode";
 
 
 const queryClient = new QueryClient({
@@ -30,34 +35,100 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner position="top-right" />
-        <DonateButton />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/latest" element={<LatestAnime />} />
-            <Route path="/top" element={<TopAnime />} />
-            <Route path="/search" element={<SearchResults />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/anime/*" element={<AnimeDetails />} />
-            <Route path="/series/*" element={<AnimeDetails />} />
-            <Route path="/episode/*" element={<WatchEpisode />} />
-            <Route path="/comics" element={<LatestComics />} />
-            <Route path="/comics/popular" element={<PopularComics />} />
-            <Route path="/comic/*" element={<ComicDetails />} />
-            <Route path="/read/*" element={<ReadChapter />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+// Page transition variants
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    y: 20,
+    scale: 0.98
+  },
+  in: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  },
+  out: {
+    opacity: 0,
+    y: -20,
+    scale: 1.02,
+    transition: {
+      duration: 0.3,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      when: "afterChildren"
+    }
+  }
+};
+
+const PageWrapper = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      className="min-h-full"
+      key="page-wrapper"
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const AppWithTransitions = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner position="top-right" />
+          <DonateButton />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
+
+const AppRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <>
+      <ScrollToTop />
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
+          <Route path="/latest" element={<PageWrapper><LatestAnime /></PageWrapper>} />
+          <Route path="/top" element={<PageWrapper><TopAnime /></PageWrapper>} />
+          <Route path="/search" element={<PageWrapper><SearchResults /></PageWrapper>} />
+          <Route path="/schedule" element={<PageWrapper><Schedule /></PageWrapper>} />
+          <Route path="/donghua" element={<PageWrapper><Donghua /></PageWrapper>} />
+          <Route path="/donghua/*" element={<PageWrapper><DonghuaDetails /></PageWrapper>} />
+          <Route path="/donghua-episode/*" element={<PageWrapper><WatchDonghuaEpisode /></PageWrapper>} />
+          <Route path="/anime/*" element={<PageWrapper><AnimeDetails /></PageWrapper>} />
+          <Route path="/series/*" element={<PageWrapper><AnimeDetails /></PageWrapper>} />
+          <Route path="/film/*" element={<PageWrapper><AnimeDetails /></PageWrapper>} />
+          <Route path="/episode/*" element={<PageWrapper><WatchEpisode /></PageWrapper>} />
+          <Route path="/comics" element={<PageWrapper><LatestComics /></PageWrapper>} />
+          <Route path="/comics/popular" element={<PageWrapper><PopularComics /></PageWrapper>} />
+          <Route path="/comic/*" element={<PageWrapper><ComicDetails /></PageWrapper>} />
+          <Route path="/read/*" element={<PageWrapper><ReadChapter /></PageWrapper>} />
+          <Route path="/bookmarks" element={<PageWrapper><Bookmarks /></PageWrapper>} />
+          <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
+        </Routes>
+      </AnimatePresence>
+    </>
+  );
+};
+
+const App = () => <AppWithTransitions />;
 
 export default App;

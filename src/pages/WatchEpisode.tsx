@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEpisodeStreams } from "@/api/animeApi";
@@ -9,6 +9,8 @@ import {
   Share2,
   ThumbsUp,
   RefreshCw,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +26,7 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import VideoPlayer from "@/components/VideoPlayer";
+import { getBookmark, updateProgress, extractEpisodeNumber, isBookmarked, addBookmark } from "@/utils/bookmarkUtils";
 
 const WatchEpisode = () => {
   const { "*": slug } = useParams();
@@ -32,9 +35,46 @@ const WatchEpisode = () => {
   const [currentStreamUrl, setCurrentStreamUrl] = useState(null);
   const [useVideoTag, setUseVideoTag] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // Mengambil judul episode dari state navigasi
   const episodeTitle = location.state?.episodeTitle || "Unknown Episode";
+
+  // Update progress when episode loads
+  useEffect(() => {
+    if (episodeTitle) {
+      // Extract anime slug from URL
+      const path = location.pathname;
+      if (path.startsWith("/episode/")) {
+        const episodeSlug = path.replace("/episode/", "").replace(/\/+$/, "");
+        const baseSlug = episodeSlug.replace(/-episode-.+$/i, "");
+        
+        if (baseSlug) {
+          // Normalize slug for consistent bookmark ID
+          const normalizedSlug = baseSlug.trim().toLowerCase();
+          
+          // Check if bookmark exists, if not create it
+          if (!isBookmarked(normalizedSlug)) {
+            // Get anime title from localStorage or use a default
+            const animeTitle = episodeTitle.split(' ')[0] || "Unknown Anime";
+            const bookmark = {
+              id: normalizedSlug,
+              title: animeTitle,
+              type: "anime" as const,
+              lastProgress: 0,
+              category: "Sedang Ditonton" as const,
+            };
+            addBookmark(bookmark);
+          }
+          
+          // Update progress
+          const episodeNumber = extractEpisodeNumber(episodeTitle);
+          updateProgress(normalizedSlug, episodeNumber);
+        }
+      }
+    }
+  }, [episodeTitle, location.pathname]);
 
   const handleShare = async () => {
     const shareData = {
@@ -59,6 +99,50 @@ const WatchEpisode = () => {
       setTimeout(() => setErrorMessage(null), 3000);
     }
   };
+
+  const toggleFullscreen = () => {
+    if (!videoContainerRef.current) return;
+
+    if (!isFullscreen) {
+      if (videoContainerRef.current.requestFullscreen) {
+        videoContainerRef.current.requestFullscreen();
+      } else if ((videoContainerRef.current as any).webkitRequestFullscreen) {
+        (videoContainerRef.current as any).webkitRequestFullscreen();
+      } else if ((videoContainerRef.current as any).mozRequestFullScreen) {
+        (videoContainerRef.current as any).mozRequestFullScreen();
+      } else if ((videoContainerRef.current as any).msRequestFullscreen) {
+        (videoContainerRef.current as any).msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
 
   const episodeUrl = `https://winbu.tv${location.pathname}`;
 
@@ -372,14 +456,35 @@ const WatchEpisode = () => {
 
           {currentStreamUrl ? (
             useVideoTag ? (
-              <VideoPlayer
-                key={iframeKey}
-                src={currentStreamUrl}
-                title={data.title}
-                onError={handleStreamError}
-              />
+              <div
+                ref={videoContainerRef}
+                className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : ''}`}
+              >
+                <VideoPlayer
+                  key={iframeKey}
+                  src={currentStreamUrl}
+                  title={data.title}
+                  onError={handleStreamError}
+                />
+                {/* Fullscreen Toggle Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white border-white/20 ${isFullscreen ? 'z-50' : ''}`}
+                  onClick={toggleFullscreen}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             ) : (
-              <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border">
+              <div
+                ref={videoContainerRef}
+                className={`w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg border border-border relative ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}
+              >
                 <iframe
                   key={iframeKey}
                   src={currentStreamUrl}
@@ -389,6 +494,19 @@ const WatchEpisode = () => {
                   sandbox={getSandboxAttribute(currentStreamUrl)}
                   onError={handleStreamError}
                 />
+                {/* Fullscreen Toggle Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white border-white/20 ${isFullscreen ? 'z-50' : ''}`}
+                  onClick={toggleFullscreen}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             )
           ) : (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -7,20 +7,45 @@ import {
   AnimeEpisode,
   RelatedAnime,
 } from "@/api/animeApi";
-import { ChevronLeft, Play, Calendar, Star, Tag } from "lucide-react";
+import { ChevronLeft, Play, Calendar, Star, Tag, Bookmark as BookmarkIcon, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+  getBookmark,
+  updateCategory,
+  updateProgress,
+  extractEpisodeNumber,
+} from "@/utils/bookmarkUtils";
+import { Bookmark as BookmarkType } from "@/types/bookmark";
+import { toast } from "sonner";
 
 const AnimeDetails = () => {
   const { "*": slug } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isBookmarkedState, setIsBookmarkedState] = useState(false);
+  const [bookmarkData, setBookmarkData] = useState<BookmarkType | null>(null);
+  const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<BookmarkType["category"]>("Sedang Ditonton");
 
   // Retrieve the title passed from AnimeCard via navigation state
   const passedTitle = location.state?.animeTitle || "Unknown Title";
+
+  // Normalize slug for consistent bookmark ID
+  const normalizedSlug = slug ? slug.trim().toLowerCase() : "";
 
   // Construct full URL from the slug
   const animeUrl = `https://winbu.tv${location.pathname}`;
@@ -30,6 +55,20 @@ const AnimeDetails = () => {
     queryFn: () => fetchAnimeDetails(animeUrl),
     retry: 1,
   });
+
+  // Check if anime is bookmarked
+  useEffect(() => {
+    if (normalizedSlug) {
+      const bookmarked = isBookmarked(normalizedSlug);
+      setIsBookmarkedState(bookmarked);
+      
+      if (bookmarked) {
+        const bookmark = getBookmark(normalizedSlug);
+        setBookmarkData(bookmark);
+        setSelectedCategory(bookmark?.category || "Sedang Dibaca");
+      }
+    }
+  }, [normalizedSlug]);
 
   // Debugging: Log the fetched data
 
@@ -162,6 +201,67 @@ const AnimeDetails = () => {
 
   const episodeGroups = groupEpisodes(data.episodes || []);
 
+  const handleAddBookmark = () => {
+    if (!data || !normalizedSlug) return;
+    
+    const bookmark = {
+      id: normalizedSlug,
+      title: displayTitle,
+      type: "anime" as const,
+      lastProgress: 0,
+      category: selectedCategory || "Sedang Ditonton",
+      imageUrl: backgroundImageUrl,
+    };
+    
+    addBookmark(bookmark);
+    setIsBookmarkedState(true);
+    setBookmarkData(getBookmark(normalizedSlug));
+    toast.success("Anime added to bookmarks!");
+  };
+
+  const handleRemoveBookmark = () => {
+    if (!normalizedSlug) return;
+    
+    removeBookmark(normalizedSlug);
+    setIsBookmarkedState(false);
+    setBookmarkData(null);
+    toast.success("Anime removed from bookmarks!");
+  };
+
+  const handleUpdateCategory = (category: BookmarkType["category"]) => {
+    if (!normalizedSlug) return;
+    
+    updateCategory(normalizedSlug, category);
+    const updated = getBookmark(normalizedSlug);
+    setBookmarkData(updated);
+    setSelectedCategory(category);
+    toast.success("Bookmark category updated!");
+  };
+
+  const handleEpisodeClick = (episode: AnimeEpisode) => {
+    // Update progress when episode is clicked
+    if (normalizedSlug) {
+      // Check if bookmark exists, if not create it
+      if (!isBookmarked(normalizedSlug)) {
+        const bookmark = {
+          id: normalizedSlug,
+          title: displayTitle,
+          type: "anime" as const,
+          lastProgress: 0,
+          category: "Sedang Ditonton" as const,
+          imageUrl: backgroundImageUrl,
+        };
+        addBookmark(bookmark);
+        setIsBookmarkedState(true);
+        setBookmarkData(getBookmark(normalizedSlug));
+      }
+      
+      // Update progress
+      const episodeNumber = extractEpisodeNumber(episode.title);
+      updateProgress(normalizedSlug, episodeNumber);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -240,6 +340,87 @@ const AnimeDetails = () => {
                   </div>
                 )}
               </div>
+
+             {/* Bookmark Section */}
+             <div className="space-y-3">
+               {isBookmarkedState ? (
+                 <div className="space-y-3">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-2">
+                       <BookmarkCheck className="h-5 w-5 text-primary" />
+                       <span className="text-sm font-medium">Bookmarked</span>
+                       {bookmarkData && (
+                         <Badge variant="secondary" className="text-xs">
+                           {bookmarkData.category}
+                         </Badge>
+                       )}
+                     </div>
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={handleRemoveBookmark}
+                       className="text-destructive hover:bg-destructive/10"
+                     >
+                       Remove
+                     </Button>
+                   </div>
+                   
+                   <div className="flex items-center gap-2">
+                     <span className="text-xs text-muted-foreground">Category:</span>
+                     <Select
+                       value={selectedCategory}
+                       onValueChange={(value) => handleUpdateCategory(value as BookmarkType["category"])}
+                     >
+                       <SelectTrigger className="h-8 text-xs w-40">
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="Sedang Ditonton">Sedang Ditonton</SelectItem>
+                         <SelectItem value="Favorit">Favorit</SelectItem>
+                         <SelectItem value="Selesai">Selesai</SelectItem>
+                         <SelectItem value="Ingin Ditonton">Ingin Ditonton</SelectItem>
+                         <SelectItem value="Ingin Dibaca">Ingin Dibaca</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   
+                   {bookmarkData && bookmarkData.lastProgress > 0 && (
+                     <div className="text-xs text-muted-foreground">
+                       Last watched: Episode {bookmarkData.lastProgress}
+                     </div>
+                   )}
+                 </div>
+               ) : (
+                 <div className="space-y-3">
+                   <div className="flex items-center gap-2">
+                     <span className="text-xs text-muted-foreground">Category:</span>
+                     <Select
+                       value={selectedCategory}
+                       onValueChange={(value) => setSelectedCategory(value as BookmarkType["category"])}
+                     >
+                       <SelectTrigger className="h-8 text-xs w-full">
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="Sedang Ditonton">Sedang Ditonton</SelectItem>
+                         <SelectItem value="Favorit">Favorit</SelectItem>
+                         <SelectItem value="Selesai">Selesai</SelectItem>
+                         <SelectItem value="Ingin Ditonton">Ingin Ditonton</SelectItem>
+                         <SelectItem value="Ingin Dibaca">Ingin Dibaca</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <Button
+                     variant="outline"
+                     className="w-full gap-2"
+                     onClick={handleAddBookmark}
+                   >
+                     <BookmarkIcon className="h-4 w-4" />
+                     Add to Bookmarks
+                   </Button>
+                 </div>
+               )}
+             </div>
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-4">{displayTitle}</h1>
@@ -252,21 +433,22 @@ const AnimeDetails = () => {
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="episodes">Episodes</TabsTrigger>
                 </TabsList>
-                <TabsContent value="overview" className="space-y-6">
-                  <div className="space-y-2">
-                    <h2 className="text-xl font-semibold">Synopsis</h2>
-                    <p className="text-muted-foreground leading-relaxed">
+                <TabsContent value="overview" className="space-y-8">
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-semibold">Synopsis</h2>
+                    <p className="text-muted-foreground leading-relaxed text-base">
                       {data.synopsis || "No synopsis available for this anime."}
                     </p>
                   </div>
 
                   {data.episodes && data.episodes.length > 0 && (
-                    <div>
+                    <div className="py-4">
                       <Link
                         to={getEpisodePath(data.episodes[0].url)}
                         state={{ episodeTitle: data.episodes[0].title }}
+                        onClick={() => handleEpisodeClick(data.episodes[0])}
                       >
-                        <Button className="gap-2">
+                        <Button size="lg" className="gap-3 px-8 py-3 text-base">
                           <Play className="h-5 w-5" />
                           Start Watching
                         </Button>
@@ -276,16 +458,16 @@ const AnimeDetails = () => {
                   
                   {/* Related Anime Section */}
                   {data.related_anime && data.related_anime.length > 0 && (
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold">Related Anime</h2>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div className="space-y-6 pt-6">
+                      <h2 className="text-2xl font-semibold">Related Anime</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {data.related_anime.map((anime: RelatedAnime, index: number) => (
                           <Link
                             key={index}
                             to={anime.url.replace("https://winbu.tv", "")}
-                            className="group space-y-2"
+                            className="group space-y-3"
                           >
-                            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted">
+                            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted shadow-md">
                               <img
                                 src={
                                   anime.image_url && anime.image_url !== "N/A"
@@ -296,7 +478,7 @@ const AnimeDetails = () => {
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                               />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                                 {anime.title}
                               </h3>
@@ -331,6 +513,7 @@ const AnimeDetails = () => {
                                 key={episode.url}
                                 to={getEpisodePath(episode.url)}
                                 state={{ episodeTitle: episode.title }}
+                                onClick={() => handleEpisodeClick(episode)}
                                 className="p-3 rounded-md bg-card hover:bg-card/80 border border-border flex items-center justify-between transition-colors"
                               >
                                 <span className="text-foreground truncate">

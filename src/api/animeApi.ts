@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "http://192.168.1.34:5000";
+const API_BASE_URL = "https://web-production-f6fa7.up.railway.app";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -156,6 +156,99 @@ export interface ReleaseSchedule {
     type: string;
   }>;
   available_days: string[];
+}
+
+// Animexin interfaces
+export interface AnimexinBasic {
+  title: string;
+  url: string;
+  image: string;
+  type?: string;
+  episode?: string;
+  status?: string;
+  genre?: string;
+  subtitle?: string;
+}
+
+export interface AnimexinPopularToday extends AnimexinBasic {
+  type: string;
+  episode: string;
+}
+
+export interface AnimexinLatestRelease extends AnimexinBasic {
+  type: string;
+  episode: string;
+}
+
+export interface AnimexinRecommendation extends AnimexinBasic {
+  status: string;
+  genre: string;
+}
+
+export interface AnimexinBlog {
+  title: string;
+  url: string;
+  image: string;
+  date: string;
+  excerpt: string;
+}
+
+export interface AnimexinEpisode {
+  number: string;
+  title: string;
+  subtitle: string;
+  release_date: string;
+  url: string;
+}
+
+export interface AnimexinSeriesDetails {
+  title: string;
+  series_url: string;
+  alternate_title: string;
+  image: string;
+  status: string;
+  network: string;
+  network_url: string;
+  studio: string;
+  studio_url: string;
+  released: string;
+  duration: string;
+  country: string;
+  country_url: string;
+  type: string;
+  fansub: string;
+  posted_by: string;
+  released_on: string;
+  updated_on: string;
+  genres: string[];
+  synopsis: {
+    english: string;
+    indonesia: string;
+  };
+  episodes: AnimexinEpisode[];
+  recommended_series: AnimexinBasic[];
+}
+
+export interface AnimexinStreamingServer {
+  server_name: string;
+  url: string;
+}
+
+export interface AnimexinEpisodeDetails {
+  series_title: string;
+  series_url: string;
+  episode: {
+    number: string;
+    title: string;
+    url: string;
+    subtitle: string;
+    release_date: string;
+  };
+  streaming_servers: AnimexinStreamingServer[];
+  posted_by: string;
+  released_on: string;
+  updated_on: string;
+  recommended_series: AnimexinBasic[];
 }
 
 // Error handling function
@@ -370,6 +463,123 @@ export const fetchPopularComics = async (): Promise<PopularComic[]> => {
   }
 };
 
+// Animexin API functions
+export const fetchAnimexinPopularToday = async (): Promise<AnimexinPopularToday[]> => {
+  try {
+    // Use the regular endpoint now that we've fixed the parsing
+    const response = await fetch(`${API_BASE_URL}/animexin/popular-today`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch popular today");
+    }
+    return result.data.popular_today;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimexinLatestRelease = async (): Promise<AnimexinLatestRelease[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/animexin/latest-release`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch latest release");
+    }
+    return result.data.latest_release;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimexinRecommendation = async (): Promise<AnimexinRecommendation[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/animexin/recommendation`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch recommendation");
+    }
+    return result.data.recommendation;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimexinLatestBlog = async (): Promise<AnimexinBlog[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/animexin/blog`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch latest blog");
+    }
+    return result.data.latest_blog;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimexinSeriesDetails = async (url: string): Promise<AnimexinSeriesDetails> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/animexin/series/${encodeURIComponent(url)}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch series details");
+    }
+    return result.data.series_details;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const fetchAnimexinEpisodeDetails = async (url: string): Promise<AnimexinEpisodeDetails> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/animexin/episode/${encodeURIComponent(url)}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to fetch episode details");
+    }
+    return result.data.episode_details;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const searchAnimexin = async (query: string): Promise<AnimexinBasic[]> => {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+    const response = await fetch(`${API_BASE_URL}/animexin/search?query=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to search animexin");
+    }
+    return result.data.search_results;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
 export const fetchLatestCollections = async (): Promise<ComicCollection[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/latest-collections`);
@@ -458,6 +668,26 @@ export const searchComics = async (query: string): Promise<ComicBasic[]> => {
     }
     console.log("Search comics results:", result.data);
     return result.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+// Search donghua (using animexin search)
+export const searchDonghua = async (query: string): Promise<AnimexinBasic[]> => {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+    const response = await fetch(`${API_BASE_URL}/animexin/search?query=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to search donghua");
+    }
+    return result.data.search_results;
   } catch (error) {
     return handleApiError(error);
   }

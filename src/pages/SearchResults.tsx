@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { searchAnime, searchComics } from "@/api/animeApi";
+import { searchAnime, searchComics, searchDonghua } from "@/api/animeApi";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnimeGrid from "@/components/AnimeGrid";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +24,12 @@ const SearchResults = () => {
   const { data: comicData, isLoading: isLoadingComics } = useQuery({
     queryKey: ["searchComics", initialQuery],
     queryFn: () => searchComics(initialQuery),
+    enabled: !!initialQuery,
+  });
+
+  const { data: donghuaData, isLoading: isLoadingDonghua } = useQuery({
+    queryKey: ["searchDonghua", initialQuery],
+    queryFn: () => searchDonghua(initialQuery),
     enabled: !!initialQuery,
   });
 
@@ -61,8 +65,34 @@ const SearchResults = () => {
       }))
     : [];
 
-  const isLoading = isLoadingAnime || isLoadingComics;
-  const hasResults = (animeData?.length || 0) + (comicData?.length || 0) > 0;
+  const transformedComicResults = comicData
+    ? comicData.map((comic) => ({
+        ...comic,
+        rating: "N/A",
+        rank: "N/A",
+        episode: "N/A",
+        views: "N/A",
+        duration: "N/A",
+        type: "comic" as const,
+      }))
+    : [];
+
+  const transformedDonghuaResults = donghuaData
+    ? donghuaData.map((donghua) => ({
+        title: donghua.title,
+        url: donghua.url,
+        image_url: donghua.image,
+        rating: "N/A",
+        rank: "N/A",
+        episode: "N/A",
+        views: "N/A",
+        duration: "N/A",
+        type: "donghua" as const,
+      }))
+    : [];
+
+  const isLoading = isLoadingAnime || isLoadingComics || isLoadingDonghua;
+  const hasResults = (animeData?.length || 0) + (comicData?.length || 0) + (donghuaData?.length || 0) > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,7 +103,7 @@ const SearchResults = () => {
             <div className="relative flex-1">
               <Input
                 type="text"
-                placeholder="Search anime or comics..."
+                placeholder="Search anime, comics, or donghua..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-8"
@@ -97,65 +127,32 @@ const SearchResults = () => {
           {initialQuery && (
             <div className="space-y-8">
               {/* Anime Results */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Anime Results</h2>
-                <AnimeGrid
-                  animeList={transformedAnimeResults}
-                  loading={isLoadingAnime}
-                  aspectRatio="portrait"
-                  viewType="grid"
-                />
-              </div>
+              <AnimeGrid
+                title={<h2 className="text-2xl font-bold">Anime Results</h2>}
+                animeList={transformedAnimeResults}
+                loading={isLoadingAnime}
+                aspectRatio="portrait"
+                viewType="grid"
+              />
 
               {/* Comic Results */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Comic Results</h2>
-                {isLoadingComics ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Card key={index} className="animate-pulse">
-                        <CardContent className="p-0">
-                          <div className="h-[300px] bg-muted" />
-                          <div className="p-4 space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4" />
-                            <div className="h-3 bg-muted rounded w-1/2" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {comicData?.map((comic) => (
-                      <Link
-                      key={comic.url}
-                      to={`/comic/${comic.url.replace(
-                        "https://komikindo4.com/komik/",
-                        ""
-                      )}`}
-                      className="block"
-                      >
-                        <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                          <CardContent className="p-0">
-                            <img
-                              src={comic.image_url}
-                              alt={comic.title}
-                              className="w-full h-[300px] object-cover"
-                              loading="lazy"
-                            />
-                            <div className="p-4">
-                              <h3 className="font-semibold line-clamp-2 mb-2">
-                                {comic.title}
-                              </h3>
-                              <Badge variant="secondary">Comic</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AnimeGrid
+                title={<h2 className="text-2xl font-bold">Comic Results</h2>}
+                animeList={transformedComicResults}
+                loading={isLoadingComics}
+                aspectRatio="portrait"
+                viewType="grid"
+              />
+
+              {/* Donghua Results */}
+              <AnimeGrid
+                title={<h2 className="text-2xl font-bold">Donghua Results</h2>}
+                animeList={transformedDonghuaResults}
+                loading={isLoadingDonghua}
+                aspectRatio="portrait"
+                viewType="grid"
+                isDonghua={true}
+              />
             </div>
           )}
 
@@ -164,7 +161,7 @@ const SearchResults = () => {
             <div className="text-center py-12">
               <h2 className="text-xl font-semibold mb-2">No results found</h2>
               <p className="text-muted-foreground mb-6">
-                We couldn't find any anime or comics matching "{initialQuery}".
+                We couldn't find any anime, comics, or donghua matching "{initialQuery}".
                 Try a different search term.
               </p>
               <Link to="/">
@@ -178,7 +175,7 @@ const SearchResults = () => {
             <div className="text-center py-12">
               <h2 className="text-xl font-semibold mb-2">Search</h2>
               <p className="text-muted-foreground">
-                Enter a search term to find your favorite anime and comics.
+                Enter a search term to find your favorite anime, comics, and donghua.
               </p>
             </div>
           )}

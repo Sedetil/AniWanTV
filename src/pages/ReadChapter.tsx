@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getBookmark, updateProgress, extractChapterNumber, isBookmarked, addBookmark } from "@/utils/bookmarkUtils";
 
 const ReadChapter = () => {
   const location = useLocation();
@@ -44,6 +45,7 @@ const ReadChapter = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showChapterSearch, setShowChapterSearch] = useState(false);
 
   const getSlug = (url: string) => {
     const parts = url.split("/");
@@ -85,6 +87,34 @@ const ReadChapter = () => {
       }
     }
   }, [chapterUrl]);
+
+  // Update progress when chapter loads
+  useEffect(() => {
+    if (data?.title && comicData?.title) {
+      const comicSlug = getSlug(data.navigation?.chapter_list || "");
+      if (comicSlug) {
+        // Normalize slug for consistent bookmark ID
+        const normalizedSlug = comicSlug.trim().toLowerCase();
+        
+        // Check if bookmark exists, if not create it
+        if (!isBookmarked(normalizedSlug)) {
+          const bookmark = {
+            id: normalizedSlug,
+            title: comicData.title,
+            type: "komik" as const,
+            lastProgress: 0,
+            category: "Sedang Dibaca" as const,
+            imageUrl: comicData.image_url,
+          };
+          addBookmark(bookmark);
+        }
+        
+        // Update progress
+        const chapterNumber = extractChapterNumber(data.title);
+        updateProgress(normalizedSlug, chapterNumber);
+      }
+    }
+  }, [data?.title, comicData?.title]);
 
   useHotkeys("left", () => {
     if (data?.navigation?.prev_chapter) {
@@ -518,6 +548,63 @@ const ReadChapter = () => {
               </div>
             </div>
           )}
+          
+          {/* Chapter Search Bar */}
+          {showChapterSearch && !isFullScreen && (
+            <div className="mb-4 sm:mb-6 bg-muted/30 p-3 sm:p-4 rounded-lg">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search chapters..."
+                  className="pl-10 pr-4 py-2 w-full text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              {/* Quick Chapter Navigation */}
+              {searchQuery && comicData?.chapters && (
+                <div className="mt-3 max-h-40 overflow-y-auto">
+                  <div className="space-y-1">
+                    {comicData.chapters
+                      .filter((chapter) =>
+                        chapter.title.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .slice(0, 5) // Show only top 5 results
+                      .map((chapter) => (
+                        <Link
+                          key={chapter.url}
+                          to={`/read/${getSlug(chapter.url)}`}
+                          onClick={() => {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                            setShowChapterSearch(false);
+                            setSearchQuery("");
+                          }}
+                          className="block p-2 rounded hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm truncate">{chapter.title}</span>
+                            <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">
+                              {chapter.update_time}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                  </div>
+                  
+                  {comicData.chapters.filter((chapter) =>
+                    chapter.title.toLowerCase().includes(searchQuery.toLowerCase())
+                  ).length === 0 && (
+                    <p className="text-sm text-muted-foreground p-2 text-center">
+                      No chapters found matching "{searchQuery}"
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
           {data.description && data.description !== "No description available" && !isFullScreen && (
             <div className="mb-4 sm:mb-6 text-sm sm:text-base text-muted-foreground bg-muted/30 p-3 sm:p-4 rounded-lg">
               <p>{data.description}</p>

@@ -1,14 +1,18 @@
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 import AnimeCard from "./AnimeCard";
 import AnimeCardSkeleton from "./AnimeCardSkeleton";
 import { TopAnime, LatestAnime } from "@/api/animeApi";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface AnimeGridProps {
   title: React.ReactNode;
-  animeList: (TopAnime | LatestAnime)[];
+  animeList: (TopAnime | LatestAnime | any)[];
   loading?: boolean;
   pagination?: {
     currentPage: number;
@@ -17,6 +21,7 @@ interface AnimeGridProps {
   };
   aspectRatio?: "portrait" | "square" | "video";
   viewType?: "grid" | "list";
+  isDonghua?: boolean;
 }
 
 const AnimeGrid = ({
@@ -26,8 +31,39 @@ const AnimeGrid = ({
   pagination,
   aspectRatio = "portrait",
   viewType = "grid",
+  isDonghua = false,
 }: AnimeGridProps) => {
   const skeletonCount = 12;
+  
+  // Stagger animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+  
+  const itemVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+      scale: 0.9
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 24
+      }
+    },
+  };
   
   return (
     <div className="space-y-4">
@@ -61,39 +97,151 @@ const AnimeGrid = ({
         )}
       </div>
       
-      <div className={cn(
-        "grid gap-4",
-        viewType === "grid" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" : "",
-        viewType === "list" ? "grid-cols-1" : ""
-      )}>
+      <motion.div
+        className={cn(
+          "grid gap-4",
+          viewType === "grid" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" : "",
+          viewType === "list" ? "grid-cols-1" : ""
+        )}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {loading
           ? Array(skeletonCount)
               .fill(0)
               .map((_, i) => (
                 <AnimeCardSkeleton key={i} aspectRatio={aspectRatio} viewType={viewType} />
               ))
-          : animeList.map((anime) => (
-              <AnimeCard
-                key={anime.url}
-                anime={anime}
-                aspectRatio={aspectRatio}
-                viewType={viewType}
-              />
-            ))}
-      </div>
+          : animeList.map((item, index) => {
+              // Check if this is a comic
+              const isComic = item.type === "comic";
+              
+              // Check if this is a donghua (from animexin)
+              const isDonghua = item.url && item.url.includes('animexin.dev');
+              
+              if (isComic) {
+                return (
+                  <motion.div
+                    key={item.url}
+                    variants={itemVariants}
+                    custom={index}
+                  >
+                    <ComicCard
+                      comic={item}
+                      aspectRatio={aspectRatio}
+                      viewType={viewType}
+                    />
+                  </motion.div>
+                );
+              }
+              
+              return (
+                <motion.div
+                  key={item.url}
+                  variants={itemVariants}
+                  custom={index}
+                >
+                  <AnimeCard
+                    anime={item}
+                    aspectRatio={aspectRatio}
+                    viewType={viewType}
+                    isDonghua={isDonghua}
+                  />
+                </motion.div>
+              );
+            })}
+      </motion.div>
       
       {!loading && animeList.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-muted-foreground">No anime found</p>
+          <p className="text-muted-foreground">No content found</p>
         </div>
       )}
     </div>
   );
 };
 
-// Helper function for className merging
-const cn = (...classes: (string | undefined | boolean)[]) => {
-  return classes.filter(Boolean).join(" ");
+// Comic Card Component
+const ComicCard = ({ comic, aspectRatio = "portrait", viewType = "grid" }: {
+  comic: any;
+  aspectRatio?: "portrait" | "square" | "video";
+  viewType?: "grid" | "list";
+}) => {
+  const [imageError, setImageError] = useState(false);
+
+  const aspectRatioClass = {
+    portrait: "aspect-[2/3]",
+    square: "aspect-square",
+    video: "aspect-video",
+  };
+
+  const fallbackImage = "/placeholder.svg";
+
+  return (
+    <div
+      className={cn(
+        "group anime-card relative",
+        viewType === "list" ? "flex flex-row h-24 md:h-32" : "flex-col",
+      )}
+    >
+      {/* Card Image */}
+      <div
+        className={cn(
+          "relative overflow-hidden",
+          viewType === "list"
+            ? "w-16 md:w-24 h-full"
+            : aspectRatioClass[aspectRatio],
+          "bg-muted"
+        )}
+      >
+        <img
+          src={
+            imageError
+              ? fallbackImage
+              : comic.image_url?.startsWith("http")
+              ? comic.image_url
+              : `https:${comic.image_url}`
+          }
+          alt={comic.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setImageError(true)}
+        />
+
+        {/* Book Icon Overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-8 w-8 rounded-full"
+          >
+            <BookOpen className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div
+        className={cn("flex flex-col p-2", viewType === "list" ? "flex-1" : "")}
+      >
+        <h3 className="font-medium text-sm line-clamp-2 text-foreground/90 group-hover:text-primary transition-colors">
+          {comic.title}
+        </h3>
+      </div>
+
+      {/* Full card is clickable */}
+      <Link
+        to={`/comic/${comic.url.replace(
+          "https://komikindo4.com/komik/",
+          ""
+        )}`}
+        className="absolute inset-0"
+        aria-label={comic.title}
+      />
+    </div>
+  );
 };
+
 
 export default AnimeGrid;
