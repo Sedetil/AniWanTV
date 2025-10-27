@@ -87,10 +87,10 @@ const Donghua = () => {
           </motion.div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="popular">Popular Today</TabsTrigger>
-              <TabsTrigger value="latest">Latest Release</TabsTrigger>
-              <TabsTrigger value="recommendation">Recommendation</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mb-8 h-auto p-1">
+              <TabsTrigger value="popular" className="text-xs sm:text-sm py-2 px-1 sm:px-3 whitespace-normal">Popular Today</TabsTrigger>
+              <TabsTrigger value="latest" className="text-xs sm:text-sm py-2 px-1 sm:px-3 whitespace-normal">Latest Release</TabsTrigger>
+              <TabsTrigger value="recommendation" className="text-xs sm:text-sm py-2 px-1 sm:px-3 whitespace-normal">Recommendation</TabsTrigger>
             </TabsList>
 
             <TabsContent value="popular" className="space-y-6">

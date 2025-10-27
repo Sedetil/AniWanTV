@@ -78,6 +78,25 @@ const WatchDonghuaEpisode = () => {
     }
   }, [data]);
 
+  // Handle fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
   // Determine the title to display
   const displayTitle = data?.episode?.title || passedTitle;
 
@@ -205,6 +224,15 @@ const WatchDonghuaEpisode = () => {
     if (!videoContainerRef.current) return;
 
     if (!isFullscreen) {
+      // Check if it's a mobile device and request landscape orientation
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile && screen.orientation && (screen.orientation as any).lock) {
+        (screen.orientation as any).lock('landscape').catch(() => {
+          // Ignore errors if orientation lock is not supported or denied
+        });
+      }
+      
       if (videoContainerRef.current.requestFullscreen) {
         videoContainerRef.current.requestFullscreen();
       } else if ((videoContainerRef.current as any).webkitRequestFullscreen) {
@@ -215,6 +243,13 @@ const WatchDonghuaEpisode = () => {
         (videoContainerRef.current as any).msRequestFullscreen();
       }
     } else {
+      // Unlock orientation when exiting fullscreen on mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile && screen.orientation && (screen.orientation as any).unlock) {
+        (screen.orientation as any).unlock();
+      }
+      
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if ((document as any).webkitExitFullscreen) {
@@ -226,24 +261,6 @@ const WatchDonghuaEpisode = () => {
       }
     }
   };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-    };
-  }, []);
 
   const currentServer = data.streaming_servers[selectedServer];
 
@@ -270,24 +287,27 @@ const WatchDonghuaEpisode = () => {
               {/* Video Player */}
               <div
                 ref={videoContainerRef}
-                className={`aspect-video bg-black rounded-lg overflow-hidden relative ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}
+                className="aspect-video bg-black rounded-lg overflow-hidden relative"
               >
                 {currentServer && currentServer.url !== "Not Available" ? (
-                  <div className="w-full h-full">
+                  <>
                     <iframe
                       src={currentServer.url}
-                      className="w-full h-full"
-                      allowFullScreen
-                      allow="autoplay; fullscreen; picture-in-picture"
+                      className="w-full h-full border-0"
+                      allow="autoplay; fullscreen; picture-in-picture; presentation; encrypted-media; *"
                       frameBorder="0"
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Video Player"
+                      style={{ border: 'none' }}
                     />
-                    {/* Fullscreen Toggle Button */}
+                    {/* Fullscreen Button */}
                     <Button
                       variant="outline"
                       size="icon"
-                      className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white border-white/20"
+                      className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 text-white border-white/20 min-h-[44px] min-w-[44px] md:min-h-[40px] md:min-w-[40px] z-10"
                       onClick={toggleFullscreen}
+                      aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                     >
                       {isFullscreen ? (
                         <Minimize2 className="h-4 w-4" />
@@ -295,7 +315,7 @@ const WatchDonghuaEpisode = () => {
                         <Maximize2 className="h-4 w-4" />
                       )}
                     </Button>
-                  </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center space-y-4">

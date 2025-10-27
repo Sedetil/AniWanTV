@@ -120,10 +120,13 @@ const AnimeGrid = ({
               // Check if this is a donghua (from animexin)
               const isDonghua = item.url && item.url.includes('animexin.dev');
               
+              // Create unique key by combining URL with index to avoid duplicates across tabs
+              const uniqueKey = `${item.url}-${index}`;
+              
               if (isComic) {
                 return (
                   <motion.div
-                    key={item.url}
+                    key={uniqueKey}
                     variants={itemVariants}
                     custom={index}
                   >
@@ -138,7 +141,7 @@ const AnimeGrid = ({
               
               return (
                 <motion.div
-                  key={item.url}
+                  key={uniqueKey}
                   variants={itemVariants}
                   custom={index}
                 >
