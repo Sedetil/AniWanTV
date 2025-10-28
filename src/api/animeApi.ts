@@ -8,6 +8,11 @@ export interface AnimeBasic {
   title: string;
   url: string;
   image_url: string;
+  rating?: string; // Tambahkan rating sebagai optional
+  rank?: string; // Tambahkan rank sebagai optional
+  episode?: string; // Tambahkan episode sebagai optional
+  views?: string; // Tambahkan views sebagai optional
+  duration?: string; // Tambahkan duration sebagai optional
 }
 
 export interface TopAnime extends AnimeBasic {
@@ -65,6 +70,11 @@ export interface ComicBasic {
   title: string;
   url: string;
   image_url: string;
+  rating?: string; // Tambahkan rating sebagai optional
+  rank?: string; // Tambahkan rank sebagai optional
+  episode?: string; // Tambahkan episode sebagai optional
+  views?: string; // Tambahkan views sebagai optional
+  duration?: string; // Tambahkan duration sebagai optional
 }
 
 export interface LatestComic extends ComicBasic {
@@ -74,6 +84,7 @@ export interface LatestComic extends ComicBasic {
   latest_chapter: string;
   chapter_url: string;
   update_time: string;
+  rating?: string;
 }
 
 export interface PopularComic extends ComicBasic {
@@ -168,11 +179,22 @@ export interface AnimexinBasic {
   status?: string;
   genre?: string;
   subtitle?: string;
+  rating?: string;
+  rank?: string; // Tambahkan rank sebagai optional
+  views?: string; // Tambahkan views sebagai optional
+  duration?: string; // Tambahkan duration sebagai optional
 }
 
 export interface AnimexinPopularToday extends AnimexinBasic {
   type: string;
   episode: string;
+  rating?: string;
+}
+
+export interface LatestDonghua extends AnimexinBasic {
+  type: string;
+  episode: string;
+  rating: string;
 }
 
 export interface AnimexinLatestRelease extends AnimexinBasic {
@@ -183,6 +205,7 @@ export interface AnimexinLatestRelease extends AnimexinBasic {
 export interface AnimexinRecommendation extends AnimexinBasic {
   status: string;
   genre: string;
+  rating?: string;
 }
 
 export interface AnimexinBlog {
@@ -215,6 +238,7 @@ export interface AnimexinSeriesDetails {
   duration: string;
   country: string;
   country_url: string;
+  rating: string;
   type: string;
   fansub: string;
   posted_by: string;

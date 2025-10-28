@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { TopAnime, LatestAnime } from "@/api/animeApi";
 
 interface AnimeCardProps {
-  anime: TopAnime | LatestAnime;
+  anime: TopAnime | LatestAnime | any; // Tambahkan any untuk mendukung data dari search
   className?: string;
   aspectRatio?: "portrait" | "square" | "video";
   width?: number;
@@ -38,6 +38,9 @@ const AnimeCard = ({
   // Check if anime has rating (TopAnime) or episode (LatestAnime)
   const isTopAnime = "rating" in anime;
   const isLatestAnime = "episode" in anime;
+  
+  // Check if anime has rating from search results
+  const hasRating = anime.rating && anime.rating !== "N/A";
 
   return (
     <div
@@ -115,8 +118,8 @@ const AnimeCard = ({
           {anime.title}
         </h3>
 
-        {/* Rating (for Top Anime) */}
-        {isTopAnime && anime.rating && anime.rating !== "N/A" && (
+        {/* Rating (for Top Anime and search results) */}
+        {hasRating && (
           <div className="flex items-center mt-1 text-xs text-muted-foreground">
             <Star
               className="h-3 w-3 text-yellow-500 mr-1"
@@ -145,7 +148,13 @@ const AnimeCard = ({
 
       {/* Full card is clickable, pass the title in navigation state */}
       <Link
-        to={isDonghua ? `/donghua${anime.url.replace("https://animexin.dev", "")}` : anime.url.split(".tv")[1]}
+        to={
+          isDonghua
+            ? `/donghua${anime.url.replace("https://animexin.dev", "")}`
+            : anime.url.includes("winbu.tv")
+              ? anime.url.split(".tv")[1]
+              : anime.url
+        }
         state={{ animeTitle: anime.title }} // Pass the title in the navigation state
         className="absolute inset-0"
         aria-label={anime.title}

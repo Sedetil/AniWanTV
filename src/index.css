@@ -113,4 +113,64 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Safe area for mobile devices */
+  .h-safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom, 0px);
+  }
+  
+  /* Add padding for bottom navigation */
+  .pb-safe-area {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem);
+  }
+  
+  /* Ensure content is visible above bottom navigation on mobile */
+  @media (max-width: 768px) {
+    main {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+    }
+    
+    /* Add extra padding for pages with tabs */
+    .tabs-content {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
+    }
+    
+    /* Ensure bottom navigation is always on top */
+    .fixed.bottom-0 {
+      z-index: 9999;
+    }
+  }
+  
+  /* Prevent horizontal scrollbar */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Ensure all containers don't overflow horizontally */
+  .container {
+    overflow-x: hidden;
+  }
+  
+  /* Fix for any horizontal scrolling elements */
+  * {
+    scrollbar-width: none;
+  }
+  
+  /* Hide horizontal scrollbar but allow vertical scrolling */
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
+  /* Specific fix for mobile devices */
+  @media (max-width: 768px) {
+    body {
+      overscroll-behavior-x: none;
+    }
+    
+    /* Prevent horizontal scroll on touch devices */
+    .overflow-x-hidden {
+      touch-action: pan-y;
+    }
+  }
 }

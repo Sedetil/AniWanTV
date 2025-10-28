@@ -101,7 +101,7 @@ const Donghua = () => {
                 transition={{ duration: 0.6 }}
               >
                 {popularLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 overflow-x-hidden">
                     {Array.from({ length: 12 }).map((_, index) => (
                       <Card key={index} className="overflow-hidden">
                         <CardContent className="p-0">
@@ -140,7 +140,7 @@ const Donghua = () => {
                 transition={{ duration: 0.6 }}
               >
                 {latestLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 overflow-x-hidden">
                     {Array.from({ length: 12 }).map((_, index) => (
                       <Card key={index} className="overflow-hidden">
                         <CardContent className="p-0">
@@ -179,7 +179,7 @@ const Donghua = () => {
                 transition={{ duration: 0.6 }}
               >
                 {recommendationLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 overflow-x-hidden">
                     {Array.from({ length: 12 }).map((_, index) => (
                       <Card key={index} className="overflow-hidden">
                         <CardContent className="p-0">

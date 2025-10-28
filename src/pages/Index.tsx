@@ -6,9 +6,13 @@ import {
   fetchLatestComics,
   fetchPopularComics,
   fetchAnimexinPopularToday,
+  fetchComicDetails,
   TopAnime,
   LatestAnime,
-  AnimexinPopularToday
+  AnimexinPopularToday,
+  LatestDonghua,
+  LatestComic,
+  ComicDetails
 } from "@/api/animeApi";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -27,6 +31,8 @@ import chinaFlag from "@/assets/images/china-flag.png";
 
 const Index = () => {
   const [featuredAnime, setFeaturedAnime] = useState<(TopAnime | LatestAnime)[] | null>(null);
+  const [featuredComicsWithRating, setFeaturedComicsWithRating] = useState<(LatestComic & { rating: string })[] | null>(null);
+  const [featuredDonghuaWithRating, setFeaturedDonghuaWithRating] = useState<(AnimexinPopularToday & { rating: string })[] | null>(null);
   
   const { data: topAnime, isLoading: topLoading } = useQuery({
     queryKey: ['topAnime'],
@@ -48,10 +54,53 @@ const Index = () => {
     queryFn: fetchPopularComics,
   });
 
+  // Fetch comic details for latest comics to get ratings
+  useEffect(() => {
+    const fetchComicsWithRatings = async () => {
+      if (latestComics && latestComics.comic_list.length > 0) {
+        const comicsWithRatings: (LatestComic & { rating: string })[] = [];
+        
+        // Get first 5 latest comics
+        const comicsToProcess = latestComics.comic_list.slice(0, 5);
+        
+        for (const comic of comicsToProcess) {
+          try {
+            const details = await fetchComicDetails(comic.url);
+            comicsWithRatings.push({
+              ...comic,
+              rating: details.rating || "N/A"
+            });
+          } catch (error) {
+            console.error(`Failed to fetch details for comic: ${comic.title}`, error);
+            comicsWithRatings.push({
+              ...comic,
+              rating: "N/A"
+            });
+          }
+        }
+        
+        setFeaturedComicsWithRating(comicsWithRatings);
+      }
+    };
+
+    fetchComicsWithRatings();
+  }, [latestComics]);
+
   const { data: popularDonghua, isLoading: popularDonghuaLoading } = useQuery({
     queryKey: ['animexinPopularToday'],
     queryFn: fetchAnimexinPopularToday,
   });
+
+  // Transform donghua data to ensure rating property exists
+  useEffect(() => {
+    if (popularDonghua && popularDonghua.length > 0) {
+      const donghuaWithRating: (AnimexinPopularToday & { rating: string })[] = popularDonghua.slice(0, 5).map(donghua => ({
+        ...donghua,
+        rating: donghua.rating || "N/A"
+      }));
+      setFeaturedDonghuaWithRating(donghuaWithRating);
+    }
+  }, [popularDonghua]);
   
   // Set featured anime from top and latest anime
   useEffect(() => {
@@ -97,8 +146,9 @@ const Index = () => {
         {/* Hero Section */}
         <HeroSection
           featuredAnime={featuredAnime}
-          featuredComics={latestComics?.comic_list.slice(0, 5) || null}
-          loading={topLoading || latestComicsLoading}
+          featuredComics={featuredComicsWithRating}
+          featuredDonghua={featuredDonghuaWithRating}
+          loading={topLoading || latestComicsLoading || popularDonghuaLoading}
         />
         
         <div className="container mx-auto px-4 py-10 space-y-12">
@@ -162,7 +212,7 @@ const Index = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 overflow-x-hidden">
               {latestComicsLoading
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden">
@@ -255,7 +305,7 @@ const Index = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 overflow-x-hidden">
               {popularComicsLoading
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden">
@@ -334,7 +384,7 @@ const Index = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 overflow-x-hidden">
               {popularDonghuaLoading
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden">

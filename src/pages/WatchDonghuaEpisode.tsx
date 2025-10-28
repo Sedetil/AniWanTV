@@ -271,7 +271,7 @@ const WatchDonghuaEpisode = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
             <Link
-              to={`/donghua/${data.series_url.replace("https://animexin.dev/", "")}`}
+              to={`/donghua${data.series_url.replace("https://animexin.dev", "")}`}
               className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />
@@ -412,7 +412,7 @@ const WatchDonghuaEpisode = () => {
                   <h3 className="text-lg font-semibold">Series Information</h3>
                   <div className="space-y-2">
                     <Link
-                      to={`/donghua/${data.series_url.replace("https://animexin.dev/", "")}`}
+                      to={`/donghua${data.series_url.replace("https://animexin.dev", "")}`}
                       className="text-primary hover:underline"
                     >
                       {data.series_title}
@@ -509,7 +509,7 @@ const WatchDonghuaEpisode = () => {
                       {data.recommended_series.slice(0, 5).map((series, index: number) => (
                         <Link
                           key={index}
-                          to={`/donghua/${series.url.replace("https://animexin.dev/", "")}`}
+                          to={`/donghua${series.url.replace("https://animexin.dev", "")}`}
                           className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent transition-colors"
                         >
                           <div className="w-12 h-16 overflow-hidden rounded">

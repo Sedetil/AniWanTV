@@ -433,13 +433,6 @@ const Header = () => {
               Home
             </Link>
             <Link
-              to="/latest"
-              className="text-foreground/80 hover:text-primary transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Latest
-            </Link>
-            <Link
               to="/top"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}
@@ -459,13 +452,6 @@ const Header = () => {
               onClick={() => setIsOpen(false)}
             >
               Donghua
-            </Link>
-            <Link
-              to="/comics"
-              className="text-foreground/80 hover:text-primary transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Latest Comics
             </Link>
             <Link
               to="/comics/popular"

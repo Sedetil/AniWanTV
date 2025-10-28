@@ -286,6 +286,18 @@ const DonghuaDetails = () => {
                 />
               </div>
               <div className="space-y-4">
+                {data.rating && data.rating !== "N/A" && (
+                  <div className="flex gap-2 items-center">
+                    <span className="text-muted-foreground">Rating:</span>
+                    <div className="flex items-center">
+                      <Star
+                        className="h-4 w-4 text-yellow-500 mr-1"
+                        fill="currentColor"
+                      />
+                      <span>{data.rating}</span>
+                    </div>
+                  </div>
+                )}
                 {data.status && data.status !== "N/A" && (
                   <div className="flex gap-2 items-center">
                     <span className="text-muted-foreground">Status:</span>
@@ -495,7 +507,7 @@ const DonghuaDetails = () => {
                         {data.recommended_series.map((series, index: number) => (
                           <Link
                             key={index}
-                            to={`/donghua/${series.url.replace("https://animexin.dev/", "")}`}
+                            to={`/donghua${series.url.replace("https://animexin.dev", "")}`}
                             className="group space-y-3"
                           >
                             <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted shadow-md">
@@ -513,11 +525,19 @@ const DonghuaDetails = () => {
                               <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                                 {series.title}
                               </h3>
-                              {series.status && series.status !== "N/A" && (
-                                <Badge variant="outline" className="text-xs">
-                                  {series.status}
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {(series as any).rating && (series as any).rating !== "N/A" && (
+                                  <div className="flex items-center gap-1">
+                                    <Star className="h-3 w-3 text-yellow-500" />
+                                    <span className="text-xs">{(series as any).rating}</span>
+                                  </div>
+                                )}
+                                {series.status && series.status !== "N/A" && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {series.status}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </Link>
                         ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { fetchChapterImages, fetchComicDetails } from "@/api/animeApi";
@@ -24,6 +24,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getBookmark, updateProgress, extractChapterNumber, isBookmarked, addBookmark } from "@/utils/bookmarkUtils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ReadChapter = () => {
   const location = useLocation();
@@ -46,6 +47,11 @@ const ReadChapter = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [showChapterSearch, setShowChapterSearch] = useState(false);
+  
+  // State untuk UI visibility
+  const [isUIVisible, setIsUIVisible] = useState(false); // Start with hidden UI
+  const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const getSlug = (url: string) => {
     const parts = url.split("/");
@@ -86,7 +92,116 @@ const ReadChapter = () => {
         }
       }
     }
+    
+    // Show hint for first-time users
+    const hasSeenHint = localStorage.getItem('readingModeHintSeen');
+    if (!hasSeenHint) {
+      // Show UI briefly to indicate it's hidden
+      setIsUIVisible(true);
+      setTimeout(() => {
+        setIsUIVisible(false);
+        localStorage.setItem('readingModeHintSeen', 'true');
+      }, 2000);
+    }
   }, [chapterUrl]);
+
+  // Auto-hide UI after idle
+  useEffect(() => {
+    const showUI = () => {
+      setLastInteractionTime(Date.now());
+      setIsUIVisible(true);
+      
+      // Clear existing timeout
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      
+      // Set new timeout to hide UI after 3 seconds of inactivity
+      idleTimeoutRef.current = setTimeout(() => {
+        setIsUIVisible(false);
+      }, 3000);
+    };
+
+    // Handle scroll events - only reset timer, don't show UI
+    const handleScroll = () => {
+      // Clear existing timeout
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      
+      // Set new timeout to hide UI after 3 seconds of inactivity
+      idleTimeoutRef.current = setTimeout(() => {
+        setIsUIVisible(false);
+      }, 3000);
+    };
+
+    // Handle single tap for scroll and double tap for UI toggle
+    let lastTapTime = 0;
+    let tapTimeout: NodeJS.Timeout | null = null;
+    
+    const handleTap = (event: MouseEvent | TouchEvent) => {
+      const currentTime = Date.now();
+      
+      // Check if this is a double tap (within 300ms)
+      if (currentTime - lastTapTime < 300) {
+        // This is a double tap - show UI
+        if (tapTimeout) {
+          clearTimeout(tapTimeout);
+          tapTimeout = null;
+        }
+        showUI();
+        lastTapTime = currentTime;
+        return;
+      }
+      
+      lastTapTime = currentTime;
+      
+      // Set a timeout to handle single tap if no second tap occurs
+      tapTimeout = setTimeout(() => {
+        // This is a single tap - handle scroll
+        const target = event.target as HTMLElement;
+        
+        // Check if the tap is on an image
+        const imageElement = target.closest('img');
+        const isInteractive = target.closest('button, a, input, [role="button"]');
+        
+        if (imageElement && !isInteractive) {
+          const rect = imageElement.getBoundingClientRect();
+          const tapY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
+          const imageMiddleY = rect.top + rect.height / 2;
+          
+          // Determine scroll direction based on tap position
+          if (tapY < imageMiddleY) {
+            // Tap on upper half - scroll up (shorter distance)
+            window.scrollBy({ top: -window.innerHeight * 0.6, behavior: 'smooth' });
+          } else {
+            // Tap on lower half - scroll down (shorter distance)
+            window.scrollBy({ top: window.innerHeight * 0.6, behavior: 'smooth' });
+          }
+        }
+        
+        tapTimeout = null;
+      }, 300);
+    };
+
+    // Add event listeners
+    window.addEventListener('scroll', handleScroll);
+    document.addEventListener('click', handleTap);
+    document.addEventListener('touchstart', handleTap);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('click', handleTap);
+      document.removeEventListener('touchstart', handleTap);
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      if (tapTimeout) {
+        clearTimeout(tapTimeout);
+      }
+    };
+  }, []);
 
   // Update progress when chapter loads
   useEffect(() => {
@@ -139,16 +254,7 @@ const ReadChapter = () => {
   });
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
     const handleScroll = () => {
-      if (!isFullScreen) {
-        setShowControls(true);
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          setShowControls(false);
-        }, 3000);
-      }
-
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollProgress = (scrollTop / docHeight) * 100;
@@ -158,9 +264,8 @@ const ReadChapter = () => {
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      clearTimeout(timeout);
     };
-  }, [isFullScreen]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("readingMode", readingMode);
@@ -459,11 +564,22 @@ const ReadChapter = () => {
         )}
         <div className={`container mx-auto px-2 sm:px-4 md:px-6 ${isFullScreen ? "max-w-full px-0" : "py-4 sm:py-6 md:py-8"}`}>
           {!isFullScreen && (
-            <div
-              className={`flex flex-wrap justify-between items-center mb-4 sm:mb-6 sticky top-0 bg-background/95 backdrop-blur-sm z-30 py-2 sm:py-3 gap-2 px-2 sm:px-4 rounded-lg shadow-sm transition-opacity duration-300 ${
-                showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
-            >
+            <AnimatePresence>
+              {isUIVisible && (
+                <motion.div
+                  className={`flex flex-wrap justify-between items-center mb-4 sm:mb-6 sticky top-0 bg-background/95 backdrop-blur-sm z-30 py-2 sm:py-3 gap-2 px-2 sm:px-4 rounded-lg shadow-sm`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: 0.3, ease: "easeOut" }
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -10,
+                    transition: { duration: 0.2, ease: "easeIn" }
+                  }}
+                >
               <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-[300px]">
                   {data.title}
@@ -546,7 +662,23 @@ const ReadChapter = () => {
                   </Button>
                 </Link>
               </div>
-            </div>
+              {/* Show hint for first-time users */}
+              {!localStorage.getItem('readingModeHintSeen') && (
+                <motion.div
+                  className="absolute -bottom-8 left-0 right-0 text-center"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                >
+                  <p className="text-xs text-muted-foreground bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 inline-block shadow-sm">
+                    Double-click: Show/Hide UI • Single tap: Gentle scroll (top=up, bottom=down)
+                  </p>
+                </motion.div>
+              )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
           
           {/* Chapter Search Bar */}
@@ -617,7 +749,7 @@ const ReadChapter = () => {
                   key={index}
                   className={`flex justify-center ${readingMode === "horizontal" ? "snap-center min-w-full flex-shrink-0" : ""}`}
                 >
-                  <div className="relative w-full max-w-[800px]">
+                  <div className="relative w-full max-w-[800px] group">
                     {/* Loading skeleton with retry indicator */}
                     {!imageLoadStatus[index] && !imageErrorStatus[index] && (
                       <div className="relative">
@@ -682,6 +814,22 @@ const ReadChapter = () => {
                       }}
                       referrerPolicy="no-referrer"
                     />
+                    
+                    {/* Tap indicators - only visible on hover for desktop */}
+                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute top-0 left-0 right-0 h-1/2 flex items-start justify-center pt-4">
+                        <div className="bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                          <ArrowUp className="h-3 w-3 inline mr-1" />
+                          Tap to scroll up
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-1/2 flex items-end justify-center pb-4">
+                        <div className="bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                          Tap to scroll down
+                          <ArrowUp className="h-3 w-3 inline ml-1 rotate-180" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))
@@ -692,11 +840,22 @@ const ReadChapter = () => {
             )}
           </div>
           {!isFullScreen && (
-            <div
-              className={`fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-4 sm:right-4 bg-background/95 backdrop-blur-sm z-50 py-2 sm:py-3 px-3 sm:px-4 rounded-lg shadow-lg transition-opacity duration-300 ${
-                showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
-            >
+            <AnimatePresence>
+              {isUIVisible && (
+                <motion.div
+                  className={`fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-4 sm:right-4 bg-background/95 backdrop-blur-sm z-50 py-2 sm:py-3 px-3 sm:px-4 rounded-lg shadow-lg`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: 0.3, ease: "easeOut" }
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: 10,
+                    transition: { duration: 0.2, ease: "easeIn" }
+                  }}
+                >
               <div className="flex justify-between items-center max-w-4xl mx-auto">
                 <div>
                   {data.navigation?.prev_chapter ? (
@@ -778,7 +937,9 @@ const ReadChapter = () => {
                   )}
                 </div>
               </div>
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
           {isFullScreen && (
             <div className="fixed top-2 sm:top-4 right-2 sm:right-4 z-50">

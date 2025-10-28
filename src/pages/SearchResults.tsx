@@ -54,42 +54,57 @@ const SearchResults = () => {
     setSearchParams({});
   };
 
+  // Debug: Log data asli dari API
+  console.log("Raw anime data from API:", animeData);
+  console.log("Raw comic data from API:", comicData);
+  console.log("Raw donghua data from API:", donghuaData);
+
   const transformedAnimeResults = animeData
     ? animeData.map((anime) => ({
         ...anime,
-        rating: "N/A",
-        rank: "N/A",
-        episode: "N/A",
-        views: "N/A",
-        duration: "N/A",
+        // Pertahankan rating asli jika ada, gunakan "N/A" hanya jika tidak ada
+        rating: anime.rating || "N/A",
+        rank: anime.rank || "N/A",
+        episode: anime.episode || "N/A",
+        views: anime.views || "N/A",
+        duration: anime.duration || "N/A",
       }))
     : [];
 
   const transformedComicResults = comicData
     ? comicData.map((comic) => ({
         ...comic,
-        rating: "N/A",
-        rank: "N/A",
-        episode: "N/A",
-        views: "N/A",
-        duration: "N/A",
+        // Pertahankan rating asli jika ada, gunakan "N/A" hanya jika tidak ada
+        rating: comic.rating || "N/A",
+        rank: comic.rank || "N/A",
+        episode: comic.episode || "N/A",
+        views: comic.views || "N/A",
+        duration: comic.duration || "N/A",
         type: "comic" as const,
       }))
     : [];
 
   const transformedDonghuaResults = donghuaData
     ? donghuaData.map((donghua) => ({
+        ...donghua,
+        // Pastikan field yang diperlukan ada
         title: donghua.title,
         url: donghua.url,
-        image_url: donghua.image,
-        rating: "N/A",
-        rank: "N/A",
-        episode: "N/A",
-        views: "N/A",
-        duration: "N/A",
+        image_url: donghua.image, // AnimexinBasic menggunakan 'image' bukan 'image_url'
+        // Pertahankan rating asli jika ada, gunakan "N/A" hanya jika tidak ada
+        rating: donghua.rating || "N/A",
+        rank: donghua.rank || "N/A",
+        episode: donghua.episode || "N/A",
+        views: donghua.views || "N/A",
+        duration: donghua.duration || "N/A",
         type: "donghua" as const,
       }))
     : [];
+
+  // Debug: Log hasil transformasi
+  console.log("Transformed anime results:", transformedAnimeResults);
+  console.log("Transformed comic results:", transformedComicResults);
+  console.log("Transformed donghua results:", transformedDonghuaResults);
 
   const isLoading = isLoadingAnime || isLoadingComics || isLoadingDonghua;
   const hasResults = (animeData?.length || 0) + (comicData?.length || 0) + (donghuaData?.length || 0) > 0;
@@ -97,8 +112,8 @@ const SearchResults = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 pt-24">
-        <div className="container mx-auto px-4 py-8 space-y-8">
+      <main className="flex-1 pt-24 pb-safe-area md:pb-0">
+        <div className="container mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
           <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
             <div className="relative flex-1">
               <Input

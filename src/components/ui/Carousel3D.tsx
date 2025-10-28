@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./button";
-import { TopAnime, LatestAnime, LatestComic } from "@/api/animeApi";
+import { TopAnime, LatestAnime, LatestComic, LatestDonghua, PopularComic, AnimexinPopularToday } from "@/api/animeApi";
 
 interface Carousel3DProps {
-  items: (TopAnime | LatestAnime | LatestComic)[];
+  items: (TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string }))[];
   autoSlide?: boolean;
   autoSlideInterval?: number;
   className?: string;
@@ -47,33 +47,49 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
     setCurrentIndex(index);
   };
 
-  // Check if item is anime or comic and its type
-  const getItemType = (item: TopAnime | LatestAnime | LatestComic) => {
+  // Check if item is anime, comic, or donghua and its type
+  const getItemType = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
     const isTopAnime = "rating" in item && !("type" in item);
-    const isLatestAnime = "episode" in item;
-    const isComic = "type" in item && "latest_chapter" in item;
+    const isLatestAnime = "episode" in item && !("image" in item);
+    const isLatestComic = "type" in item && "latest_chapter" in item;
+    const isPopularComic = "type" in item && "author" in item;
+    const isDonghua = "image" in item && "episode" in item;
 
-    if (isComic) return "comic";
+    if (isLatestComic || isPopularComic) return "comic";
     if (isLatestAnime) return "latest-anime";
+    if (isDonghua) return "donghua";
     return "top-anime";
   };
 
   // Get item URL based on type
-  const getItemUrl = (item: TopAnime | LatestAnime | LatestComic) => {
+  const getItemUrl = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
     const type = getItemType(item);
     if (type === "comic") {
-      return `/comic/${(item as LatestComic).url.match(/\/komik\/([^/]+)\/?$/)?.[1] || (item as LatestComic).url}`;
+      const comicItem = item as LatestComic & { rating: string } | PopularComic;
+      return `/comic/${comicItem.url.match(/\/komik\/([^/]+)\/?$/)?.[1] || comicItem.url}`;
+    }
+    if (type === "donghua") {
+      return `/donghua`;
     }
     return (item as any).url.split(".tv")[1];
   };
 
   // Get item title based on type
-  const getItemTitle = (item: TopAnime | LatestAnime | LatestComic) => {
+  const getItemTitle = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
     return item.title;
   };
 
+  // Get item image URL based on type
+  const getItemImage = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
+    const type = getItemType(item);
+    if (type === "donghua") {
+      return (item as LatestDonghua).image;
+    }
+    return (item as TopAnime | LatestAnime | (LatestComic & { rating: string }) | PopularComic).image_url;
+  };
+
   // Get item badge based on type
-  const getItemBadge = (item: TopAnime | LatestAnime | LatestComic) => {
+  const getItemBadge = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
     const type = getItemType(item);
     if (type === "latest-anime" && (item as LatestAnime).episode !== "N/A") {
       return { text: `Episode ${(item as LatestAnime).episode}`, className: "bg-primary/80" };
@@ -82,7 +98,7 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
   };
 
   // Get item metadata based on type
-  const getItemMetadata = (item: TopAnime | LatestAnime | LatestComic) => {
+  const getItemMetadata = (item: TopAnime | LatestAnime | (LatestComic & { rating: string }) | LatestDonghua | PopularComic | (AnimexinPopularToday & { rating: string })) => {
     const type = getItemType(item);
     const metadata = [];
 
@@ -154,7 +170,94 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
       }
     }
 
+    if (type === "donghua") {
+      metadata.push({
+        icon: (
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+            />
+          </svg>
+        ),
+        text: (item as LatestDonghua | (AnimexinPopularToday & { rating: string })).type || "Donghua",
+      });
+      
+      // Add rating for donghua if available
+      const donghuaItem = item as LatestDonghua | (AnimexinPopularToday & { rating: string });
+      if (donghuaItem.rating && donghuaItem.rating !== "N/A") {
+        metadata.push({
+          icon: (
+            <svg
+              className="w-4 h-4 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          ),
+          text: donghuaItem.rating,
+        });
+      }
+    }
+
     if (type === "comic") {
+      const comicItem = item as (LatestComic & { rating: string }) | PopularComic;
+      const isPopularComic = "author" in comicItem;
+      
+      // Add rating for comics if available
+      if (
+        (isPopularComic && (comicItem as PopularComic).rating && (comicItem as PopularComic).rating !== "N/A") ||
+        (!isPopularComic && (comicItem as LatestComic & { rating: string }).rating && (comicItem as LatestComic & { rating: string }).rating !== "N/A")
+      ) {
+        metadata.push({
+          icon: (
+            <svg
+              className="w-4 h-4 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          ),
+          text: isPopularComic ? (comicItem as PopularComic).rating : (comicItem as LatestComic & { rating: string }).rating,
+        });
+      }
+
+      // Add author for popular comics
+      if (isPopularComic && (comicItem as PopularComic).author) {
+        metadata.push({
+          icon: (
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          ),
+          text: (comicItem as PopularComic).author,
+        });
+      }
+
+      // Add type for all comics
       metadata.push({
         icon: (
           <svg
@@ -172,20 +275,32 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
             />
           </svg>
         ),
-        text: (item as LatestComic).type,
+        text: (comicItem as LatestComic).type,
       });
 
-      if ((item as LatestComic).is_hot) {
-        metadata.push({
-          icon: <span className="text-xs">🔥</span>,
-          text: "Hot",
-        });
+      // Add specific metadata for latest comics
+      if (!isPopularComic) {
+        const latestComic = comicItem as LatestComic;
+        if (latestComic.is_hot) {
+          metadata.push({
+            icon: <span className="text-xs">🔥</span>,
+            text: "Hot",
+          });
+        }
+
+        if (latestComic.is_colored) {
+          metadata.push({
+            icon: <span className="text-xs">🎨</span>,
+            text: "Colored",
+          });
+        }
       }
 
-      if ((item as LatestComic).is_colored) {
+      // Add rank for popular comics
+      if (isPopularComic && (comicItem as PopularComic).rank && (comicItem as PopularComic).rank !== "N/A") {
         metadata.push({
-          icon: <span className="text-xs">🎨</span>,
-          text: "Colored",
+          icon: null,
+          text: `Rank ${(comicItem as PopularComic).rank}`,
         });
       }
     }
@@ -245,7 +360,7 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
   }
 
   return (
-    <div className={`relative w-full h-[70vh] overflow-hidden ${className}`}>
+    <div className={`relative w-full h-[70vh] overflow-hidden overflow-x-hidden ${className}`}>
       {/* Carousel Container */}
       <div className="relative w-full h-full">
         <AnimatePresence initial={false} custom={direction}>
@@ -264,8 +379,8 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
                   backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url("${
-                    items[currentIndex].image_url && items[currentIndex].image_url !== "N/A"
-                      ? items[currentIndex].image_url
+                    getItemImage(items[currentIndex]) && getItemImage(items[currentIndex]) !== "N/A"
+                      ? getItemImage(items[currentIndex])
                       : "https://via.placeholder.com/1920x1080?text=Banner"
                   }")`,
                 }}
@@ -345,6 +460,30 @@ const Carousel3D: React.FC<Carousel3DProps> = ({
                               />
                             </svg>
                             <span>Read Now</span>
+                          </>
+                        ) : getItemType(items[currentIndex]) === "donghua" ? (
+                          <>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span>Watch Now</span>
                           </>
                         ) : (
                           <>

@@ -1,18 +1,20 @@
-import { TopAnime, LatestAnime, LatestComic } from "@/api/animeApi";
+import { TopAnime, LatestAnime, LatestComic, LatestDonghua, PopularComic, AnimexinPopularToday } from "@/api/animeApi";
 import Carousel3D from "@/components/ui/Carousel3D";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface HeroSectionProps {
   featuredAnime: (TopAnime | LatestAnime)[] | null;
-  featuredComics?: LatestComic[] | null;
+  featuredComics?: (LatestComic & { rating: string })[] | null;
+  featuredDonghua?: (AnimexinPopularToday & { rating: string })[] | null;
   loading?: boolean;
 }
 
-const HeroSection = ({ featuredAnime, featuredComics, loading = false }: HeroSectionProps) => {
+const HeroSection = ({ featuredAnime, featuredComics, featuredDonghua, loading = false }: HeroSectionProps) => {
   // Combine anime and comics for the carousel
   const allFeaturedItems = [
     ...(featuredAnime || []),
-    ...(featuredComics || [])
+    ...(featuredComics || []),
+    ...(featuredDonghua || [])
   ];
 
   if (loading) {

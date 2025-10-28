@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -99,7 +99,7 @@ const AnimeGrid = ({
       
       <motion.div
         className={cn(
-          "grid gap-4",
+          "grid gap-4 overflow-x-hidden",
           viewType === "grid" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" : "",
           viewType === "list" ? "grid-cols-1" : ""
         )}
@@ -122,6 +122,9 @@ const AnimeGrid = ({
               
               // Create unique key by combining URL with index to avoid duplicates across tabs
               const uniqueKey = `${item.url}-${index}`;
+              
+              // Debug: Log item data untuk memverifikasi rating
+              console.log(`AnimeGrid item ${index}:`, item);
               
               if (isComic) {
                 return (
@@ -172,6 +175,9 @@ const ComicCard = ({ comic, aspectRatio = "portrait", viewType = "grid" }: {
   viewType?: "grid" | "list";
 }) => {
   const [imageError, setImageError] = useState(false);
+  
+  // Debug: Log comic data untuk memverifikasi rating
+  console.log("ComicCard data:", comic);
 
   const aspectRatioClass = {
     portrait: "aspect-[2/3]",
@@ -231,12 +237,26 @@ const ComicCard = ({ comic, aspectRatio = "portrait", viewType = "grid" }: {
         <h3 className="font-medium text-sm line-clamp-2 text-foreground/90 group-hover:text-primary transition-colors">
           {comic.title}
         </h3>
+        
+        {/* Rating untuk comic */}
+        {comic.rating && comic.rating !== "N/A" && (
+          <div className="flex items-center mt-1 text-xs text-muted-foreground">
+            <Star
+              className="h-3 w-3 text-yellow-500 mr-1"
+              fill="currentColor"
+            />
+            <span>{comic.rating}</span>
+          </div>
+        )}
       </div>
 
       {/* Full card is clickable */}
       <Link
         to={`/comic/${comic.url.replace(
           "https://komikindo4.com/komik/",
+          ""
+        ).replace(
+          "https://komikindo.ch/komik/",
           ""
         )}`}
         className="absolute inset-0"
