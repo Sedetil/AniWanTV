@@ -39,18 +39,29 @@ export const addBookmark = (bookmark: Omit<Bookmark, "updatedAt">): Bookmark[] =
     // Check if bookmark already exists with normalized ID
     const existingIndex = bookmarks.findIndex(b => b.id.trim().toLowerCase() === normalizedId);
     
-    const newBookmark: Bookmark = {
-      ...bookmark,
-      id: normalizedId, // Use normalized ID
-      updatedAt: new Date().toISOString(),
-    };
-    
     if (existingIndex >= 0) {
-      // Update existing bookmark
-      bookmarks[existingIndex] = newBookmark;
-      console.log("Updated existing bookmark:", newBookmark);
+      // Update existing bookmark with new data, but preserve existing complete data
+      const existingBookmark = bookmarks[existingIndex];
+      const updatedBookmark: Bookmark = {
+        ...existingBookmark, // Keep all existing data
+        ...bookmark, // Override with new data
+        id: normalizedId, // Ensure normalized ID
+        updatedAt: new Date().toISOString(),
+        // Preserve imageUrl if existing one is more complete
+        imageUrl: bookmark.imageUrl || existingBookmark.imageUrl,
+        // Preserve title if existing one is more complete
+        title: bookmark.title !== "Unknown Anime" ? bookmark.title : existingBookmark.title,
+      };
+      
+      bookmarks[existingIndex] = updatedBookmark;
+      console.log("Updated existing bookmark:", updatedBookmark);
     } else {
       // Add new bookmark
+      const newBookmark: Bookmark = {
+        ...bookmark,
+        id: normalizedId, // Use normalized ID
+        updatedAt: new Date().toISOString(),
+      };
       bookmarks.push(newBookmark);
       console.log("Added new bookmark:", newBookmark);
     }
@@ -195,6 +206,72 @@ export const extractEpisodeNumber = (title: string): number => {
   }
   
   return 0;
+};
+
+// Clean up duplicate bookmarks (same anime with different IDs)
+export const cleanupDuplicateBookmarks = (): Bookmark[] => {
+  try {
+    const bookmarks = getBookmarks();
+    const uniqueBookmarks: Bookmark[] = [];
+    const seenIds = new Set<string>();
+    
+    // Group bookmarks by normalized title to find potential duplicates
+    const titleGroups: Record<string, Bookmark[]> = {};
+    
+    bookmarks.forEach(bookmark => {
+      const normalizedTitle = bookmark.title.toLowerCase().trim();
+      if (!titleGroups[normalizedTitle]) {
+        titleGroups[normalizedTitle] = [];
+      }
+      titleGroups[normalizedTitle].push(bookmark);
+    });
+    
+    // Process each group to find the best bookmark
+    Object.values(titleGroups).forEach(group => {
+      if (group.length === 1) {
+        // Only one bookmark with this title, keep it
+        const bookmark = group[0];
+        const normalizedId = bookmark.id.trim().toLowerCase();
+        if (!seenIds.has(normalizedId)) {
+          uniqueBookmarks.push(bookmark);
+          seenIds.add(normalizedId);
+        }
+      } else {
+        // Multiple bookmarks with similar titles, find the most complete one
+        let bestBookmark = group[0];
+        let bestScore = 0;
+        
+        group.forEach(bookmark => {
+          let score = 0;
+          // Prefer bookmarks with complete data
+          if (bookmark.title && bookmark.title !== "Unknown Anime") score += 3;
+          if (bookmark.imageUrl) score += 2;
+          if (bookmark.lastProgress > 0) score += 1;
+          if (bookmark.category && bookmark.category !== "Sedang Ditonton") score += 1;
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestBookmark = bookmark;
+          }
+        });
+        
+        const normalizedId = bestBookmark.id.trim().toLowerCase();
+        if (!seenIds.has(normalizedId)) {
+          uniqueBookmarks.push(bestBookmark);
+          seenIds.add(normalizedId);
+        }
+      }
+    });
+    
+    // Save the cleaned up bookmarks
+    localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(uniqueBookmarks));
+    console.log(`Cleaned up ${bookmarks.length - uniqueBookmarks.length} duplicate bookmarks`);
+    
+    return uniqueBookmarks;
+  } catch (error) {
+    console.error("Error cleaning up duplicate bookmarks:", error);
+    return getBookmarks();
+  }
 };
 
 // Extract chapter number from chapter title

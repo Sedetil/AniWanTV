@@ -204,19 +204,37 @@ const AnimeDetails = () => {
   const handleAddBookmark = () => {
     if (!data || !normalizedSlug) return;
     
-    const bookmark = {
-      id: normalizedSlug,
-      title: displayTitle,
-      type: "anime" as const,
-      lastProgress: 0,
-      category: selectedCategory || "Sedang Ditonton",
-      imageUrl: backgroundImageUrl,
-    };
+    // Check if bookmark already exists
+    const existingBookmark = getBookmark(normalizedSlug);
     
-    addBookmark(bookmark);
-    setIsBookmarkedState(true);
-    setBookmarkData(getBookmark(normalizedSlug));
-    toast.success("Anime added to bookmarks!");
+    if (existingBookmark) {
+      // Update existing bookmark instead of creating duplicate
+      const updatedBookmark = {
+        ...existingBookmark,
+        title: displayTitle,
+        category: selectedCategory || "Sedang Ditonton",
+        imageUrl: backgroundImageUrl,
+      };
+      
+      addBookmark(updatedBookmark);
+      setBookmarkData(updatedBookmark);
+      toast.success("Bookmark updated!");
+    } else {
+      // Create new bookmark
+      const bookmark = {
+        id: normalizedSlug,
+        title: displayTitle,
+        type: "anime" as const,
+        lastProgress: 0,
+        category: selectedCategory || "Sedang Ditonton",
+        imageUrl: backgroundImageUrl,
+      };
+      
+      addBookmark(bookmark);
+      setIsBookmarkedState(true);
+      setBookmarkData(getBookmark(normalizedSlug));
+      toast.success("Anime added to bookmarks!");
+    }
   };
 
   const handleRemoveBookmark = () => {
@@ -241,8 +259,11 @@ const AnimeDetails = () => {
   const handleEpisodeClick = (episode: AnimeEpisode) => {
     // Update progress when episode is clicked
     if (normalizedSlug) {
-      // Check if bookmark exists, if not create it
-      if (!isBookmarked(normalizedSlug)) {
+      // Check if bookmark exists
+      const existingBookmark = getBookmark(normalizedSlug);
+      
+      if (!existingBookmark) {
+        // Create new bookmark with complete data
         const bookmark = {
           id: normalizedSlug,
           title: displayTitle,
@@ -253,6 +274,15 @@ const AnimeDetails = () => {
         };
         addBookmark(bookmark);
         setIsBookmarkedState(true);
+        setBookmarkData(getBookmark(normalizedSlug));
+      } else if (!existingBookmark.imageUrl || existingBookmark.title === "Unknown Anime") {
+        // Update existing bookmark if it has incomplete data
+        const updatedBookmark = {
+          ...existingBookmark,
+          title: displayTitle,
+          imageUrl: backgroundImageUrl,
+        };
+        addBookmark(updatedBookmark);
         setBookmarkData(getBookmark(normalizedSlug));
       }
       

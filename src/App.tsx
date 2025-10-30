@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "next-themes";
@@ -24,6 +25,7 @@ import DonghuaDetails from "./pages/DonghuaDetails";
 import WatchDonghuaEpisode from "./pages/WatchDonghuaEpisode";
 import BottomNavigation from "./components/BottomNavigation";
 import ConditionalBottomNavigation from "./components/ConditionalBottomNavigation";
+import { cleanupDuplicateBookmarks } from "@/utils/bookmarkUtils";
 
 
 const queryClient = new QueryClient({
@@ -99,6 +101,11 @@ const AppWithTransitions = () => {
 
 const AppRoutes = () => {
   const location = useLocation();
+  
+  // Clean up duplicate bookmarks on app initialization
+  useEffect(() => {
+    cleanupDuplicateBookmarks();
+  }, []);
   
   return (
     <>

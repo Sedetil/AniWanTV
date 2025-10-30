@@ -111,6 +111,7 @@ const Schedule = () => {
               </div>
             ) : (
               <AnimeGrid
+                title="Jadwal Rilis Anime"
                 animeList={formatAnimeData()}
                 loading={false}
                 aspectRatio="portrait"

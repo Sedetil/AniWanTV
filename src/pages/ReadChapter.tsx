@@ -135,7 +135,7 @@ const ReadChapter = () => {
       }, 3000);
     };
 
-    // Handle single tap for scroll and double tap for UI toggle
+    // Handle double tap for UI toggle
     let lastTapTime = 0;
     let tapTimeout: NodeJS.Timeout | null = null;
     
@@ -158,28 +158,7 @@ const ReadChapter = () => {
       
       // Set a timeout to handle single tap if no second tap occurs
       tapTimeout = setTimeout(() => {
-        // This is a single tap - handle scroll
-        const target = event.target as HTMLElement;
-        
-        // Check if the tap is on an image
-        const imageElement = target.closest('img');
-        const isInteractive = target.closest('button, a, input, [role="button"]');
-        
-        if (imageElement && !isInteractive) {
-          const rect = imageElement.getBoundingClientRect();
-          const tapY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
-          const imageMiddleY = rect.top + rect.height / 2;
-          
-          // Determine scroll direction based on tap position
-          if (tapY < imageMiddleY) {
-            // Tap on upper half - scroll up (shorter distance)
-            window.scrollBy({ top: -window.innerHeight * 0.6, behavior: 'smooth' });
-          } else {
-            // Tap on lower half - scroll down (shorter distance)
-            window.scrollBy({ top: window.innerHeight * 0.6, behavior: 'smooth' });
-          }
-        }
-        
+        // Single tap now does nothing - only double tap shows UI
         tapTimeout = null;
       }, 300);
     };
@@ -672,7 +651,7 @@ const ReadChapter = () => {
                   transition={{ duration: 0.3, delay: 0.5 }}
                 >
                   <p className="text-xs text-muted-foreground bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 inline-block shadow-sm">
-                    Double-click: Show/Hide UI • Single tap: Gentle scroll (top=up, bottom=down)
+                    Double-click: Show/Hide UI
                   </p>
                 </motion.div>
               )}
@@ -815,21 +794,6 @@ const ReadChapter = () => {
                       referrerPolicy="no-referrer"
                     />
                     
-                    {/* Tap indicators - only visible on hover for desktop */}
-                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="absolute top-0 left-0 right-0 h-1/2 flex items-start justify-center pt-4">
-                        <div className="bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-                          <ArrowUp className="h-3 w-3 inline mr-1" />
-                          Tap to scroll up
-                        </div>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 h-1/2 flex items-end justify-center pb-4">
-                        <div className="bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-                          Tap to scroll down
-                          <ArrowUp className="h-3 w-3 inline ml-1 rotate-180" />
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               ))
