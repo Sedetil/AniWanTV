@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "https://web-production-cea9.up.railway.app";
+const API_BASE_URL = "http://159.223.42.28:5000";
 
 // API response interfaces
 export interface AnimeBasic {
