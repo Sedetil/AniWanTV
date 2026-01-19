@@ -44,9 +44,9 @@ const Header = () => {
   useEffect(() => {
     setShowResults(
       debouncedSearch.length > 2 &&
-        ((animeResults && animeResults.length > 0) ||
-          (comicResults && comicResults.length > 0) ||
-          (donghuaResults && donghuaResults.length > 0))
+      ((animeResults && animeResults.length > 0) ||
+        (comicResults && comicResults.length > 0) ||
+        (donghuaResults && donghuaResults.length > 0))
     );
   }, [debouncedSearch, animeResults, comicResults, donghuaResults]);
 
@@ -81,9 +81,9 @@ const Header = () => {
       newPath = path;
     }
     console.log("Final newPath for navigation:", newPath);
-  
+
     navigate(newPath, { state: { title } });
-  
+
     setTimeout(() => {
       setSearchQuery("");
       setShowResults(false);
@@ -115,19 +115,18 @@ const Header = () => {
   useEffect(() => {
     setShowResults(
       debouncedSearch.length > 2 &&
-        ((animeResults && animeResults.length > 0) ||
-          (comicResults && comicResults.length > 0) ||
-          (donghuaResults && donghuaResults.length > 0))
+      ((animeResults && animeResults.length > 0) ||
+        (comicResults && comicResults.length > 0) ||
+        (donghuaResults && donghuaResults.length > 0))
     );
   }, [debouncedSearch, animeResults, comicResults, donghuaResults]);
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? "bg-background/95 backdrop-blur-md shadow-md"
           : "bg-background/95"
-      }`}
+        }`}
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -188,8 +187,8 @@ const Header = () => {
               </Link>
               <a
                 href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
-                className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium hover:from-blue-600 hover:to-purple-700 whitespace-nowrap"
-                >
+                className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-red-500 to-orange-500 text-white px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium hover:from-red-600 hover:to-orange-600 whitespace-nowrap"
+              >
                 📱 App
               </a>
             </nav>
@@ -469,7 +468,7 @@ const Header = () => {
             </Link>
             <a
               href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
-              className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-full text-sm font-medium hover:from-blue-600 hover:to-purple-700 text-center"
+              className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-2 rounded-full text-sm font-medium hover:from-red-600 hover:to-orange-600 text-center"
             >
               📱 Download Aplikasi AniWanTV Mobile Sekarang
             </a>

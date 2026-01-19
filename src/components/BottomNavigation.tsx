@@ -1,14 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
-  Search,
-  Bookmark,
-  User,
   Tv2,
   BookOpen,
-  Heart
+  Bookmark,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +21,10 @@ interface NavItem {
 const BottomNavigation = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.pathname);
+
+  useEffect(() => {
+    setActiveTab(location.pathname);
+  }, [location.pathname]);
 
   const navItems: NavItem[] = [
     {
@@ -57,180 +59,89 @@ const BottomNavigation = () => {
     },
   ];
 
-  // Animation variants for the active indicator
-  const indicatorVariants = {
-    inactive: {
-      scale: 0,
-      opacity: 0,
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut",
-      },
-    },
-    active: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 300,
-        damping: 20,
-      },
-    },
-  };
-
-  // Animation variants for the icon
-  const iconVariants = {
-    inactive: {
-      y: 0,
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut",
-      },
-    },
-    active: {
-      y: -2,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 400,
-        damping: 17,
-      },
-    },
-  };
-
-  // Glow effect for active item
-  const glowVariants = {
-    inactive: {
-      boxShadow: "0 0 0 rgba(139, 92, 246, 0)",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut",
-      },
-    },
-    active: {
-      boxShadow: "0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3)",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut",
-      },
-    },
-  };
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden" id="bottom-navigation">
-      {/* Background with blur effect */}
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-xl border-t border-gray-800/50" />
-      
-      {/* Navigation container */}
-      <nav className="relative flex justify-around items-center h-16 px-2">
+      {/* Glassmorphism Background Container */}
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.3)]" />
+
+      {/* Navigation Content */}
+      <nav className="relative flex justify-around items-center h-20 px-4 pb-[env(safe-area-inset-bottom)]">
         {navItems.map((item) => {
-          const isActive = 
-            activeTab === item.path || 
+          const isActive =
+            activeTab === item.path ||
             (item.id === "home" && activeTab === "/") ||
             (item.id !== "home" && activeTab.startsWith(item.path));
-          
+
           const Icon = item.icon;
-          
+
           return (
             <Link
               key={item.id}
               to={item.path}
+              className="relative flex flex-col items-center justify-center w-full h-full group outline-none"
               onClick={() => setActiveTab(item.path)}
-              className={cn(
-                "relative flex flex-col items-center justify-center w-full h-full py-2 transition-all duration-300",
-                "group"
-              )}
             >
-              {/* Active indicator with glow */}
-              {isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-lg bg-purple-600/20"
-                  variants={glowVariants}
-                  initial="inactive"
-                  animate="active"
-                  style={{
-                    margin: "4px 8px",
-                  }}
-                />
-              )}
-              
-              {/* Icon container */}
-              <motion.div
-                className="relative flex flex-col items-center justify-center"
-                variants={iconVariants}
-                animate={isActive ? "active" : "inactive"}
-              >
-                {/* Icon */}
-                <Icon
-                  className={cn(
-                    "relative z-10 transition-colors duration-300",
-                    isActive
-                      ? "text-purple-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]"
-                      : "text-gray-400 group-hover:text-gray-300"
-                  )}
-                  width={20}
-                  height={20}
-                />
-                
-                {/* Active indicator dot */}
+              {/* Active Indicator Background */}
+              <AnimatePresence>
                 {isActive && (
                   <motion.div
-                    className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
-                    variants={indicatorVariants}
-                    initial="inactive"
-                    animate="active"
+                    layoutId="activeTabBackground"
+                    className="absolute top-2 w-12 h-12 bg-primary/15 rounded-2xl"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   />
                 )}
-                
-                {/* Badge if needed */}
+              </AnimatePresence>
+
+              {/* Icon */}
+              <div className="relative z-10 p-1">
+                <Icon
+                  className={cn(
+                    "w-6 h-6 transition-all duration-300",
+                    isActive
+                      ? "text-primary drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]"
+                      : "text-muted-foreground group-hover:text-primary/70"
+                  )}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+
+                {/* Notification Badge */}
                 {item.badge && item.badge > 0 && (
-                  <motion.div
-                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 15,
-                    }}
-                  >
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
                     {item.badge > 9 ? "9+" : item.badge}
-                  </motion.div>
+                  </span>
                 )}
-              </motion.div>
-              
+              </div>
+
               {/* Label */}
-              <motion.span
+              <span
                 className={cn(
-                  "text-xs mt-1 transition-colors duration-300 font-medium",
-                  isActive 
-                    ? "text-purple-400" 
-                    : "text-gray-500 group-hover:text-gray-400"
+                  "text-[10px] font-medium transition-all duration-300 mt-1",
+                  isActive
+                    ? "text-primary translate-y-0 opacity-100"
+                    : "text-muted-foreground translate-y-1 opacity-70 group-hover:text-primary/70 group-hover:translate-y-0 group-hover:opacity-100"
                 )}
-                animate={{
-                  scale: isActive ? 1.05 : 1,
-                }}
-                transition={{
-                  duration: 0.2,
-                  ease: "easeInOut",
-                }}
               >
                 {item.label}
-              </motion.span>
-              
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-purple-600/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
-                   style={{ margin: "4px 8px" }} />
+              </span>
+
+              {/* Active Bottom Bar Indicator (Matches the image's line idea) */}
+              {isActive && (
+                <motion.div
+                  layoutId="activeTabBottomLine"
+                  className="absolute bottom-1 w-8 h-1 bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
+              )}
             </Link>
           );
         })}
       </nav>
-      
-      {/* Safe area padding for iOS */}
-      <div className="h-safe-area-inset-bottom bg-black/90" />
+
+      {/* Safe Area Spacer */}
+      <div className="h-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-xl" />
     </div>
   );
 };

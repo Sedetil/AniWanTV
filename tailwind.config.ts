@@ -28,6 +28,8 @@ export default {
 				'1000': '1000px',
 			},
 			colors: {
+				'aniwan-dark': '#121212',
+				'aniwan-red': '#E50914',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -95,18 +97,18 @@ export default {
 					}
 				},
 				'fade-in': {
-				  from: { 
-				    opacity: '0',
-				    transform: 'translateY(10px)'
-				  },
-				  to: { 
-				    opacity: '1',
-				    transform: 'translateY(0)'
-				  }
+					from: {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					to: {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				},
 				'pulse-slow': {
-				  '0%, 100%': { opacity: '1' },
-				  '50%': { opacity: '0.5' }
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
 				}
 			},
 			animation: {

@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
 
 @tailwind base;
@@ -8,64 +7,71 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 255 70% 74%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 357 92% 47%;
+    /* #E50914 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 255 30% 54%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 218 11% 65%;
+    /* gray-400 */
 
-    --accent: 255 50% 64%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 255 70% 74%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 357 92% 47%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 232 35% 5%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 7%;
+    /* #121212 */
+    --foreground: 0 0% 100%;
+    /* #FFFFFF */
 
-    --card: 232 35% 9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 9%;
+    /* Slightly lighter than background */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 232 35% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 255 70% 74%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 357 92% 47%;
+    /* #E50914 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 255 30% 54%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 218 11% 65%;
+    /* gray-400 */
 
-    --accent: 255 50% 64%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 255 70% 74%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 357 92% 47%;
   }
 }
 
@@ -84,90 +90,90 @@
   .anime-card {
     @apply relative overflow-hidden rounded-md transition-all duration-300 shadow-lg hover:shadow-xl bg-card hover:scale-[1.02];
   }
-  
+
   .anime-card img {
     @apply object-cover w-full h-full transition-all duration-300;
   }
-  
+
   .anime-card:hover img {
     @apply scale-105;
   }
-  
+
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
-  
+
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent;
   }
-  
+
   .glassmorphism {
     @apply bg-card/60 backdrop-blur-md border border-white/10;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   /* Safe area for mobile devices */
   .h-safe-area-inset-bottom {
     height: env(safe-area-inset-bottom, 0px);
   }
-  
+
   /* Add padding for bottom navigation */
   .pb-safe-area {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem);
   }
-  
+
   /* Ensure content is visible above bottom navigation on mobile */
   @media (max-width: 768px) {
     main {
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
     }
-    
+
     /* Add extra padding for pages with tabs */
     .tabs-content {
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
     }
-    
+
     /* Ensure bottom navigation is always on top */
     .fixed.bottom-0 {
       z-index: 9999;
     }
   }
-  
+
   /* Prevent horizontal scrollbar */
   body {
     overflow-x: hidden;
   }
-  
+
   /* Ensure all containers don't overflow horizontally */
   .container {
     overflow-x: hidden;
   }
-  
+
   /* Fix for any horizontal scrolling elements */
   * {
     scrollbar-width: none;
   }
-  
+
   /* Hide horizontal scrollbar but allow vertical scrolling */
   html {
     overflow-x: hidden;
     overflow-y: auto;
   }
-  
+
   /* Specific fix for mobile devices */
   @media (max-width: 768px) {
     body {
       overscroll-behavior-x: none;
     }
-    
+
     /* Prevent horizontal scroll on touch devices */
     .overflow-x-hidden {
       touch-action: pan-y;

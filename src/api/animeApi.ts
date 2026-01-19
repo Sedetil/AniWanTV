@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Base API URL - Change this to match your Flask API's URL
-const API_BASE_URL = "https://web-production-f6fa7.up.railway.app";
+const API_BASE_URL = "https://web-production-273d.up.railway.app";
 
 // API response interfaces
 export interface AnimeBasic {
@@ -641,7 +641,7 @@ export const fetchComicDetails = async (url: string): Promise<ComicDetails> => {
 export const fetchChapterImages = async (chapterUrl: string) => {
   try {
     console.log('Fetching chapter images from URL:', chapterUrl);
-    
+
     const response = await fetch(
       `${API_BASE_URL}/chapter-images?url=${encodeURIComponent(chapterUrl)}`,
       {
