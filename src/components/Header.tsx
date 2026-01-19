@@ -186,7 +186,7 @@ const Header = () => {
                 Bookmarks
               </Link>
               <a
-                href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
+                href="https://app-aniwantv.vercel.app"
                 className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-red-500 to-orange-500 text-white px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium hover:from-red-600 hover:to-orange-600 whitespace-nowrap"
               >
                 📱 App
@@ -467,7 +467,7 @@ const Header = () => {
               My Bookmarks
             </Link>
             <a
-              href="https://github.com/Sedetil/AniWanTV-Mobile/releases/download/v1.0.0/app-arm64-v8a-release.apk"
+              href="https://app-aniwantv.vercel.app"
               className="text-foreground/80 hover:text-primary transition-colors bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-2 rounded-full text-sm font-medium hover:from-red-600 hover:to-orange-600 text-center"
             >
               📱 Download Aplikasi AniWanTV Mobile Sekarang
